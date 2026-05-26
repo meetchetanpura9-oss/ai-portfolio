@@ -1,0 +1,122 @@
+/**
+ * Premium AI Portfolio — design tokens
+ * Palette: Deep navy + violet + cyan + glass surfaces
+ */
+
+@theme {
+  /* Surfaces */
+  --color-void: #050816;
+  --color-surface: #070b1a;
+  --color-surface-raised: #0c1021;
+  --color-surface-glass: rgba(18, 24, 45, 0.55);
+
+  /* Brand accents */
+  --color-accent: #8b5cf6;
+  --color-accent-bright: #c084fc;
+  --color-accent-cyan: #22d3ee;
+  --color-accent-rose: #f472b6;
+  --color-accent-emerald: #34d399;
+
+  /* Text */
+  --color-text-primary: #f8fafc;
+  --color-text-muted: #a1a1ba;
+  --color-text-dim: #7c82a1;
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, #8b5cf6 0%, #d946ef 45%, #22d3ee 100%);
+  --gradient-glow: radial-gradient(circle at top, rgba(139, 92, 246, 0.25), transparent 60%);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Poppins", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --shadow-glow-violet: 0 0 40px rgba(139, 92, 246, 0.24);
+  --shadow-glow-cyan: 0 0 30px rgba(34, 211, 238, 0.18);
+}
+
+.bg-void {
+  background-color: var(--color-void);
+}
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-surface-raised {
+  background-color: var(--color-surface-raised);
+}
+
+.text-gradient-brand {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(28px);
+}
+
+.glow-border:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: var(--shadow-glow-violet);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Utility classes for consistent sections */
+.bg-void {
+  background-color: var(--color-void);
+}
+.bg-surface {
+  background-color: var(--color-surface);
+}
+.bg-surface-raised {
+  background-color: var(--color-surface-raised);
+}
+
+.text-gradient-brand {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass-card {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+}
+
+.glow-border:hover {
+  border-color: rgb(139 92 246 / 0.45);
+  box-shadow: var(--shadow-glow-violet);
+}
+
+/* 3D tilt ready */
+.preserve-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

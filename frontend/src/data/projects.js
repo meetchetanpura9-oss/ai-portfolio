@@ -1,0 +1,92 @@
+export const PROJECTS = [
+  {
+    id: "ai-business-analytics-dashboard",
+    title: "AI Business Analytics Dashboard",
+    category: "Business Intelligence",
+    description:
+      "Built a Power BI dashboard integrated with SQL and Python analytics to monitor KPIs, business trends, and forecasting insights.",
+    tech: ["Power BI", "SQL", "Python", "Analytics"],
+    github: "https://github.com",
+    demo: "https://example.com",
+    featured: true,
+    span: "large",
+    glow: "violet",
+    accent: "from-violet-600/40 to-fuchsia-600/20",
+  },
+  {
+    id: "intelligent-automation-system",
+    title: "Intelligent Automation System",
+    category: "Workflow Automation",
+    description:
+      "Developed a Python automation workflow that reduced manual operational tasks and improved efficiency.",
+    tech: ["Python", "Automation", "API Integration", "Workflow"],
+    github: "https://github.com",
+    demo: "https://example.com",
+    featured: false,
+    span: "default",
+    glow: "cyan",
+    accent: "from-cyan-600/35 to-violet-600/15",
+  },
+  {
+    id: "machine-learning-prediction-model",
+    title: "Machine Learning Prediction Model",
+    category: "Machine Learning",
+    description:
+      "Created predictive ML models using Scikit-learn and TensorFlow for data-driven business forecasting.",
+    tech: ["Python", "Scikit-learn", "TensorFlow", "Pandas"],
+    github: "https://github.com",
+    demo: "https://example.com",
+    featured: true,
+    span: "large",
+    glow: "fuchsia",
+    accent: "from-fuchsia-600/35 via-violet-600/25 to-cyan-500/20",
+  },
+  {
+    id: "ai-powered-data-processing-pipeline",
+    title: "AI-Powered Data Processing Pipeline",
+    category: "Data Engineering",
+    description:
+      "Designed scalable pipelines for automated data cleaning, transformation, and visualization.",
+    tech: ["Python", "Pandas", "SQL", "Visualization"],
+    github: "https://github.com",
+    demo: null,
+    featured: false,
+    span: "default",
+    glow: "cyan",
+    accent: "from-cyan-600/35 to-violet-600/15",
+  },
+  {
+    id: "deep-learning-classification-system",
+    title: "Deep Learning Classification System",
+    category: "Deep Learning",
+    description:
+      "Implemented deep learning models for intelligent pattern recognition and classification tasks.",
+    tech: ["TensorFlow", "PyTorch", "Neural Networks", "Python"],
+    github: "https://github.com",
+    demo: "https://example.com",
+    featured: false,
+    span: "wide",
+    glow: "violet",
+    accent: "from-violet-500/30 to-cyan-500/20",
+  },
+  {
+    id: "custom-ai-tools",
+    title: "Custom AI Tools",
+    category: "AI Products",
+    description:
+      "Built scalable AI products tailored to business needs, automation goals, and data-driven decision-making.",
+    tech: ["Python", "AI Automation", "APIs", "Backend Logic"],
+    github: "https://github.com",
+    demo: "https://example.com",
+    featured: false,
+    span: "default",
+    glow: "fuchsia",
+    accent: "from-fuchsia-600/30 to-violet-600/15",
+  },
+];
+
+export const SPAN_CLASSES = {
+  large: "md:col-span-2 lg:col-span-2 lg:row-span-2",
+  wide: "md:col-span-2",
+  default: "",
+};

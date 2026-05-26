@@ -1,0 +1,80 @@
+import {
+  SiPython,
+  SiTensorflow,
+  SiPytorch,
+  SiPandas,
+  SiNumpy,
+  SiScikitlearn,
+  SiOpenai,
+  SiJupyter,
+  SiPostgresql,
+  SiGit,
+  SiFastapi,
+} from "react-icons/si";
+import {
+  HiOutlineChip,
+  HiOutlineDatabase,
+  HiOutlineCode,
+  HiOutlineLightningBolt,
+} from "react-icons/hi";
+
+export const SKILL_CATEGORIES = [
+  {
+    id: "ml",
+    label: "AI & Machine Learning",
+    tabIcon: HiOutlineChip,
+    orbitIcons: [SiPython, SiScikitlearn, SiPandas, SiNumpy, SiJupyter],
+    skills: [
+      { name: "Machine Learning", level: 94 },
+      { name: "Deep Learning", level: 88 },
+      { name: "Neural Networks", level: 86 },
+      { name: "Predictive Analytics", level: 90 },
+      { name: "NLP Fundamentals", level: 82 },
+      { name: "Model Optimization", level: 84 },
+    ],
+  },
+  {
+    id: "automation",
+    label: "Automation & Development",
+    tabIcon: HiOutlineLightningBolt,
+    orbitIcons: [SiPython, SiFastapi, SiOpenai, SiGit, SiPostgresql],
+    skills: [
+      { name: "Python Automation", level: 92 },
+      { name: "Workflow Automation", level: 90 },
+      { name: "API Integration", level: 88 },
+      { name: "AI System Design", level: 86 },
+      { name: "Backend Logic Development", level: 84 },
+      { name: "Data Processing Pipelines", level: 88 },
+    ],
+  },
+  {
+    id: "data",
+    label: "Data & Analytics",
+    tabIcon: HiOutlineDatabase,
+    orbitIcons: [SiPandas, SiPostgresql, SiPython, SiNumpy, SiJupyter],
+    skills: [
+      { name: "Power BI Dashboards", level: 90 },
+      { name: "Data Visualization", level: 89 },
+      { name: "Excel Analytics", level: 86 },
+      { name: "SQL & PostgreSQL", level: 92 },
+      { name: "Business Intelligence", level: 88 },
+      { name: "KPI Reporting", level: 87 },
+    ],
+  },
+  {
+    id: "tools",
+    label: "Tools & Technologies",
+    tabIcon: HiOutlineCode,
+    orbitIcons: [SiPython, SiTensorflow, SiPytorch, SiScikitlearn, SiGit],
+    skills: [
+      { name: "Python", level: 94 },
+      { name: "TensorFlow", level: 86 },
+      { name: "PyTorch", level: 84 },
+      { name: "Scikit-learn", level: 90 },
+      { name: "Pandas & NumPy", level: 92 },
+      { name: "PostgreSQL", level: 88 },
+      { name: "Power BI", level: 90 },
+      { name: "Git & GitHub", level: 91 },
+    ],
+  },
+];
