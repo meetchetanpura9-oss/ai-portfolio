@@ -18,12 +18,15 @@ function isLocalApiUrl(url) {
 function resolveBaseURL() {
   const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
   const pageHost = window.location.hostname;
+  const isLocalHost = LOCAL_HOSTS.has(pageHost);
 
-  if (envUrl && (!isLocalApiUrl(envUrl) || LOCAL_HOSTS.has(pageHost))) {
-    return envUrl;
+  if (envUrl) {
+    if (!isLocalApiUrl(envUrl) || isLocalHost) {
+      return envUrl;
+    }
   }
 
-  return "/api";
+  return isLocalHost ? "/api" : window.location.origin;
 }
 
 export const api = axios.create({

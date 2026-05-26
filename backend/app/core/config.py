@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: int = 30
 
     # API / CORS
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    ALLOWED_ORIGINS: str = "*"
     RATE_LIMIT_REQUESTS: int = 5
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
@@ -61,7 +61,10 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> List[str]:
-        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+        origins = [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+        if not origins or origins == ["*"]:
+            return ["*"]
+        return origins
 
     @property
     def mail_enabled(self) -> bool:

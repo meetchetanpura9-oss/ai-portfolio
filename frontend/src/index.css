@@ -6,12 +6,27 @@
   color-scheme: dark;
 }
 
-html {
-  scroll-behavior: auto;
+html,
+body {
+  width: 100%;
   min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
@@ -30,8 +45,19 @@ body {
   will-change: transform;
 }
 
-html, body {
-  overscroll-behavior: contain;
+button,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
 }
 
 body::before {

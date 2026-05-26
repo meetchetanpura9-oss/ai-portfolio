@@ -14,11 +14,31 @@ export function SmoothScrollProvider({ children }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const isTouchDevice =
+      "ontouchstart" in window ||
+      window.navigator.maxTouchPoints > 0 ||
+      window.matchMedia("(pointer: coarse)").matches;
+
+    if (isTouchDevice) {
+      const handleScroll = () => {
+        const limit = document.documentElement.scrollHeight - window.innerHeight;
+        const target = limit > 0 ? Math.min(100, Math.max(0, (window.scrollY / limit) * 100)) : 0;
+        setProgress(Math.round(target * 100) / 100);
+      };
+
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      handleScroll();
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+      };
+    }
+
     const instance = new Lenis({
       duration: 1.3,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smooth: true,
-      smoothTouch: true,
+      smoothTouch: false,
       direction: "vertical",
       gestureOrientation: "vertical",
       lerp: 0.08,

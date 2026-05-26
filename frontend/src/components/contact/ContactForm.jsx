@@ -80,7 +80,13 @@ export default function ContactForm() {
           message = `${err.response.status} ${err.response.statusText}`;
         }
       } else if (err.message) {
-        message = `Network error: ${err.message}`;
+        if (window.location.hostname !== "localhost") {
+          message =
+            "Contact backend is not configured for this site. " +
+            "Please set VITE_API_URL to your API URL or deploy the backend on the same origin.";
+        } else {
+          message = `Network error: ${err.message}`;
+        }
       }
 
       if (err.response?.status === 429) {
