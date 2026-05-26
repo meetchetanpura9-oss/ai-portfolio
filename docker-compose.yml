@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-AI Portfolio}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      ADMIN_PHONE_SMS: ${ADMIN_PHONE_SMS}
+      ADMIN_PHONE_WHATSAPP: ${ADMIN_PHONE_WHATSAPP}
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
+      CONTACT_CSV_PATH: ${CONTACT_CSV_PATH:-data/contact_submissions.csv}
+    volumes:
+      - ./backend/data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://backend:8000}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
