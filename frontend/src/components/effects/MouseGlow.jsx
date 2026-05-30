@@ -6,6 +6,10 @@ export default function MouseGlow() {
   const positionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    // Disable mouse glow on touch devices to conserve CPU, battery, and avoid visual bugs
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+    if (isTouchDevice) return;
+
     positionRef.current = {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,

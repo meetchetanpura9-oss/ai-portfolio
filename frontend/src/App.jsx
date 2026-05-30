@@ -15,7 +15,7 @@ import MouseGlow from "./components/effects/MouseGlow";
 function App() {
   return (
     <SmoothScrollProvider>
-      <div className="relative min-h-screen overflow-x-hidden bg-void text-white">
+      <div className="relative bg-void text-white">
         <ScrollProgress />
         <MouseGlow />
 

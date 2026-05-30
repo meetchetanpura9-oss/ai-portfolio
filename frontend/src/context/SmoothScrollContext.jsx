@@ -1,98 +1,49 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import Lenis from "@studio-freight/lenis";
 
 const SmoothScrollContext = createContext({
   scrollTo: () => {},
   progress: 0,
-  lenis: null,
 });
 
 export function SmoothScrollProvider({ children }) {
   const [progress, setProgress] = useState(0);
-  const [lenis, setLenis] = useState(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const isTouchDevice =
-      "ontouchstart" in window ||
-      window.navigator.maxTouchPoints > 0 ||
-      window.matchMedia("(pointer: coarse)").matches;
-
-    if (isTouchDevice) {
-      const handleScroll = () => {
-        const limit = document.documentElement.scrollHeight - window.innerHeight;
-        const target = limit > 0 ? Math.min(100, Math.max(0, (window.scrollY / limit) * 100)) : 0;
-        setProgress(Math.round(target * 100) / 100);
-      };
-
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      handleScroll();
-
-      return () => {
-        window.removeEventListener("scroll", handleScroll);
-      };
-    }
-
-    const instance = new Lenis({
-      duration: 1.3,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smooth: true,
-      smoothTouch: false,
-      direction: "vertical",
-      gestureOrientation: "vertical",
-      lerp: 0.08,
-    });
-
-    let rafId;
-    let lastProgress = -1;
-
-    const loop = (time) => {
-      instance.raf(time);
-      const target = instance.limit ? Math.min(100, Math.max(0, (instance.scroll / instance.limit) * 100)) : 0;
-      if (Math.abs(target - lastProgress) > 0.2) {
-        setProgress(Math.round(target * 100) / 100);
-        lastProgress = target;
-      }
-      rafId = requestAnimationFrame(loop);
+    const updateProgress = () => {
+      const limit = document.documentElement.scrollHeight - window.innerHeight;
+      const target = limit > 0 ? Math.min(100, Math.max(0, (window.scrollY / limit) * 100)) : 0;
+      setProgress(Math.round(target * 100) / 100);
     };
 
-    rafId = requestAnimationFrame(loop);
-    setLenis(instance);
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
 
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      instance.destroy();
+      window.removeEventListener("scroll", updateProgress);
     };
   }, []);
 
-  const scrollTo = useMemo(() => {
-    return (target, options = {}) => {
-      if (!lenis) {
-        if (typeof target === "string") {
-          const element = document.querySelector(target);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth" });
-            return;
-          }
-        }
-        window.scrollTo({ top: typeof target === "number" ? target : 0, behavior: "smooth" });
-        return;
-      }
-
+  const scrollTo = useMemo(
+    () => (target, options = {}) => {
       if (typeof target === "string") {
         const element = document.querySelector(target);
         if (element) {
-          lenis.scrollTo(element, options);
+          const offset = options.offset ?? 0;
+          const top = Math.max(0, element.getBoundingClientRect().top + window.pageYOffset + offset);
+          window.scrollTo({ top, behavior: "smooth" });
           return;
         }
       }
 
-      lenis.scrollTo(target, options);
-    };
-  }, [lenis]);
+      const top = typeof target === "number" ? target : 0;
+      window.scrollTo({ top, behavior: "smooth" });
+    },
+    []
+  );
 
-  const value = useMemo(() => ({ scrollTo, progress, lenis }), [scrollTo, progress, lenis]);
+  const value = useMemo(() => ({ scrollTo, progress }), [scrollTo, progress]);
 
   return <SmoothScrollContext.Provider value={value}>{children}</SmoothScrollContext.Provider>;
 }

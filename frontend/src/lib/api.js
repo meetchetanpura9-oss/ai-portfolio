@@ -17,16 +17,16 @@ function isLocalApiUrl(url) {
 
 function resolveBaseURL() {
   const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
-  const pageHost = window.location.hostname;
-  const isLocalHost = LOCAL_HOSTS.has(pageHost);
 
+  // If a specific backend URL is configured (e.g. Render), use it!
   if (envUrl) {
-    if (!isLocalApiUrl(envUrl) || isLocalHost) {
-      return envUrl;
-    }
+    return envUrl;
   }
 
-  return isLocalHost ? "/api" : window.location.origin;
+  // Otherwise, default to relative "/api" prefix.
+  // Locally, Vite proxies "/api" to http://localhost:8000 (FastAPI).
+  // On Vercel, "/api/contact" is handled by the api/contact.js serverless function.
+  return "/api";
 }
 
 export const api = axios.create({

@@ -92,14 +92,14 @@ export default function Hero() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.6 }}
-              className="text-5xl font-semibold leading-[0.98] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl font-display"
+              className="text-[11vw] xs:text-5xl font-semibold leading-[0.98] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl font-display"
             >
               <span className="block">Meet Chetanpura</span>
               <span className="mt-5 flex flex-wrap items-center gap-2 sm:gap-3">
                 {TAGLINE_WORDS.map((word) => (
                   <span
                     key={word}
-                    className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-base font-semibold text-gray-100 shadow-[0_0_28px_rgba(139,92,246,0.12)] backdrop-blur-md sm:px-4 sm:text-xl lg:text-2xl"
+                    className="rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-xs font-semibold text-gray-100 shadow-[0_0_28px_rgba(139,92,246,0.12)] backdrop-blur-md xs:text-sm sm:px-4 sm:text-xl lg:text-2xl"
                   >
                     {word}
                   </span>
@@ -154,7 +154,7 @@ export default function Hero() {
               {STATS.map((stat) => (
                 <div key={stat.label}>
                   <p className="text-2xl font-semibold text-white sm:text-3xl">{stat.value}</p>
-                  <p className="mt-0.5 text-xs uppercase tracking-[0.3em] text-gray-500 sm:text-sm">
+                  <p className="mt-0.5 text-[9px] uppercase tracking-wider text-gray-500 sm:text-xs sm:tracking-[0.3em]">
                     {stat.label}
                   </p>
                 </div>
@@ -168,49 +168,85 @@ export default function Hero() {
             transition={{ delay: 0.35, duration: 0.7 }}
             className="order-1 flex justify-center lg:order-2"
           >
-            <div className="relative w-full max-w-[430px] sm:max-w-[500px] lg:max-w-[560px]">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 m-auto h-[min(100%,530px)] w-[min(100%,530px)] rounded-full border border-dashed border-violet-500/25"
-              />
+            <div className="relative w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[480px] px-4">
+              {/* Outer Pulsing Glow */}
+              <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-tr from-violet-600/30 via-fuchsia-600/10 to-cyan-500/20 blur-2xl opacity-80" />
 
+              {/* Animated HUD brackets (futuristic scanner corners) */}
+              <div className="absolute inset-0 pointer-events-none z-20">
+                {/* Top-Left Bracket */}
+                <motion.div 
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute left-1 top-1 h-6 w-6 border-l-2 border-t-2 border-cyan-400 rounded-tl-xl" 
+                />
+                {/* Top-Right Bracket */}
+                <motion.div 
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                  className="absolute right-1 top-1 h-6 w-6 border-r-2 border-t-2 border-fuchsia-400 rounded-tr-xl" 
+                />
+                {/* Bottom-Left Bracket */}
+                <motion.div 
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.0 }}
+                  className="absolute left-1 bottom-1 h-6 w-6 border-l-2 border-b-2 border-violet-400 rounded-bl-xl" 
+                />
+                {/* Bottom-Right Bracket */}
+                <motion.div 
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                  className="absolute right-1 bottom-1 h-6 w-6 border-r-2 border-b-2 border-cyan-400 rounded-br-xl" 
+                />
+                
+                {/* Subtle tech crosshairs in center */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 opacity-25">
+                  <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white" />
+                  <div className="absolute left-1/2 top-0 h-full w-[1px] bg-white" />
+                </div>
+              </div>
+
+              {/* Glowing Outer Gradient Border Frame */}
               <motion.div
-                animate={{ y: [0, -14, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="relative mx-auto aspect-square w-[min(380px,88vw)] sm:w-[450px] lg:w-[500px]"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+                className="relative mx-auto aspect-square w-full rounded-[2rem] p-[2.5px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_50px_rgba(139,92,246,0.25)] hover:shadow-[0_0_70px_rgba(139,92,246,0.45)] transition-shadow duration-500"
               >
-                <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-violet-600/40 via-fuchsia-600/20 to-cyan-500/30 blur-2xl" />
-
-                <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/20 bg-white/5 p-1 shadow-[0_0_80px_rgba(139,92,246,0.35)] backdrop-blur-sm">
+                {/* Inner Glassmorphic container */}
+                <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-[#070b1a]/90 p-1 backdrop-blur-xl">
+                  {/* Subtle Grid overlay for digital tech look */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none" />
+                  
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={HERO_IMAGES[activeImage]}
                       src={HERO_IMAGES[activeImage]}
                       alt="Meet Chetanpura - AI Engineer"
-                      initial={{ opacity: 0, scale: 1.02 }}
+                      initial={{ opacity: 0, scale: 1.03 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                       onError={(event) => {
                         event.currentTarget.src = "/linkedin.png";
                       }}
-                      className="h-full w-full rounded-full object-cover object-center"
+                      className="h-full w-full rounded-[1.7rem] object-cover object-center transition-transform duration-700 hover:scale-105"
                     />
                   </AnimatePresence>
                 </div>
               </motion.div>
 
-              <div className="mt-6 flex justify-center gap-2">
+              {/* Premium pagination dots indicator */}
+              <div className="mt-5 flex justify-center gap-2 relative z-20">
                 {HERO_IMAGES.map((image, index) => (
                   <button
                     key={image}
                     type="button"
                     onClick={() => setActiveImage(index)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                    className={`h-2 rounded-full transition-all duration-300 ${
                       activeImage === index
-                        ? "w-7 bg-violet-300"
-                        : "w-2.5 bg-white/20 hover:bg-white/35"
+                        ? "w-6 bg-gradient-to-r from-violet-400 to-cyan-300"
+                        : "w-2 bg-white/20 hover:bg-white/35"
                     }`}
                     aria-label={`Show hero image ${index + 1}`}
                   />
