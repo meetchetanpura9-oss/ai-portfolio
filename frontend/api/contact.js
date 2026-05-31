@@ -72,6 +72,17 @@ module.exports = async (req, res) => {
     const adminEmail = process.env.ADMIN_EMAIL || "meetchetanpura9@gmail.com";
     const siteName = process.env.SITE_NAME || "Chetanpura Meet — AI Portfolio";
 
+    // 4. Configure Nodemailer Transporter
+    const transporter = nodemailer.createTransport({
+      host: mailServer,
+      port: mailPort,
+      secure: mailPort === 465, // true for 465, false for other ports
+      auth: {
+        user: mailUser,
+        pass: mailPass,
+      },
+    });
+
     const escapeHtml = (value = "") =>
       String(value)
         .replace(/&/g, "&amp;")
