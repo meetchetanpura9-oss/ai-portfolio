@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
     }
 
     // 3. Email Settings from environment variables
-    const mailServer = process.env.MAIL_SERVER || "smtp.gmail.com";
+        const mailServer = process.env.MAIL_SERVER || "smtp.gmail.com";
     const mailPort = parseInt(process.env.MAIL_PORT || "587", 10);
     const mailUser = process.env.MAIL_USERNAME || "meetchetanpura9@gmail.com";
     // Gmail App Password
@@ -72,17 +72,15 @@ module.exports = async (req, res) => {
     const adminEmail = process.env.ADMIN_EMAIL || "meetchetanpura9@gmail.com";
     const siteName = process.env.SITE_NAME || "Chetanpura Meet — AI Portfolio";
 
-    // 4. Configure Nodemailer Transporter
-    const transporter = nodemailer.createTransport({
-      host: mailServer,
-      port: mailPort,
-      secure: mailPort === 465, // true for 465, false for other ports
-      auth: {
-        user: mailUser,
-        pass: mailPass,
-      },
-    });
+    const escapeHtml = (value = "") =>
+      String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
+    const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }) + " (IST)";
     const cleanCompany = company ? company.trim() : "Not specified";
 
@@ -94,23 +92,23 @@ module.exports = async (req, res) => {
             <p style="margin:0 0 8px;color:#34d399;font-size:13px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">
               New Client Connection
             </p>
-            <h2 style="color:#fff;margin:0 0 10px;font-size:24px;">${full_name} wants to collaborate</h2>
+            <h2 style="color:#fff;margin:0 0 10px;font-size:24px;">${escapeHtml(full_name)} wants to collaborate</h2>
             <p style="color:#aaa;font-size:14px;line-height:1.6;margin:0 0 24px;">
               A visitor filled out the contact form on your AI Portfolio website.
             </p>
 
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              <tr><td style="padding:10px 0;color:#888;width:120px;">Name</td><td style="padding:10px 0;color:#fff;"><strong>${full_name}</strong></td></tr>
-              <tr><td style="padding:10px 0;color:#888;">Email</td><td style="padding:10px 0;color:#fff;"><a href="mailto:${email}" style="color:#38bdf8;text-decoration:none;">${email}</a></td></tr>
-              <tr><td style="padding:10px 0;color:#888;">Phone</td><td style="padding:10px 0;color:#fff;">${phone}</td></tr>
-              <tr><td style="padding:10px 0;color:#888;">Company</td><td style="padding:10px 0;color:#fff;">${cleanCompany}</td></tr>
-              <tr><td style="padding:10px 0;color:#888;">Service Needed</td><td style="padding:10px 0;color:#c084fc;font-weight:bold;">${service}</td></tr>
-              <tr><td style="padding:10px 0;color:#888;">Timestamp</td><td style="padding:10px 0;color:#9ca3af;font-size:12px;">${timestamp}</td></tr>
+              <tr><td style="padding:10px 0;color:#888;width:120px;">Name</td><td style="padding:10px 0;color:#fff;"><strong>${escapeHtml(full_name)}</strong></td></tr>
+              <tr><td style="padding:10px 0;color:#888;">Email</td><td style="padding:10px 0;color:#fff;"><a href="mailto:${escapeHtml(email)}" style="color:#38bdf8;text-decoration:none;">${escapeHtml(email)}</a></td></tr>
+              <tr><td style="padding:10px 0;color:#888;">Phone</td><td style="padding:10px 0;color:#fff;">${escapeHtml(phone)}</td></tr>
+              <tr><td style="padding:10px 0;color:#888;">Company</td><td style="padding:10px 0;color:#fff;">${escapeHtml(cleanCompany)}</td></tr>
+              <tr><td style="padding:10px 0;color:#888;">Service Needed</td><td style="padding:10px 0;color:#c084fc;font-weight:bold;">${escapeHtml(service)}</td></tr>
+              <tr><td style="padding:10px 0;color:#888;">Timestamp</td><td style="padding:10px 0;color:#9ca3af;font-size:12px;">${escapeHtml(timestamp)}</td></tr>
             </table>
 
             <div style="margin-top:24px;padding:18px;background:#0A0A0F;border-radius:10px;border:1px solid #2a2a3a;">
               <p style="margin:0 0 10px;color:#a78bfa;font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">Client Message</p>
-              <p style="margin:0;line-height:1.7;color:#eee;white-space:pre-wrap;">${message}</p>
+              <p style="margin:0;line-height:1.7;color:#eee;white-space:pre-wrap;">${safeMessage}</p>
             </div>
 
             <p style="margin:24px 0 0;font-size:11px;color:#555;text-align:center;">
@@ -121,20 +119,32 @@ module.exports = async (req, res) => {
       </html>
     `;
 
+    const adminText = `New contact form submission from ${full_name}\n\n` +
+      `Email: ${email}\n` +
+      `Phone: ${phone}\n` +
+      `Company: ${cleanCompany}\n` +
+      `Service: ${service}\n` +
+      `Timestamp: ${timestamp}\n\n` +
+      `Message:\n${message}`;
+
     // 6. Client Auto-Reply HTML Template (Recruiter-friendly branding)
     const clientHtml = `
       <html>
         <body style="margin:0;font-family:Arial,sans-serif;background:#0A0A0F;color:#eee;padding:24px;">
           <div style="max-width:560px;margin:0 auto;background:#14141f;border:1px solid #333;border-radius:14px;padding:28px;box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);">
-            <h2 style="color:#a78bfa;margin:0 0 16px;">Thanks for connecting with me, ${full_name}!</h2>
+            <h2 style="color:#a78bfa;margin:0 0 16px;">Thanks for connecting with me, ${escapeHtml(full_name)}!</h2>
             <p style="line-height:1.7;color:#ddd;font-size:15px;margin:0;">
-              Your message was sent successfully. I have received your request for <strong>${service}</strong> and will contact you soon.
+              Your message was sent successfully. I have received your request for <strong>${escapeHtml(service)}</strong> and will contact you soon.
             </p>
+            <div style="margin-top:18px;padding:18px;background:#0A0A0F;border-radius:12px;border:1px solid #2a2a3a;">
+              <p style="margin:0 0 8px;color:#a78bfa;font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">Your submitted message</p>
+              <p style="margin:0;line-height:1.7;color:#eee;white-space:pre-wrap;">${safeMessage}</p>
+            </div>
             <p style="line-height:1.7;color:#aaa;font-size:14px;margin:18px 0 0;">
               I typically reply within 24 to 48 hours. Looking forward to discussing how we can work together!
             </p>
             
-            <div style="margin-top:28px;border-top:1px solid #222;pt:16px;color:#888;font-size:13px;display:flex;align-items:center;">
+            <div style="margin-top:28px;border-top:1px solid #222;padding-top:16px;color:#888;font-size:13px;display:flex;align-items:center;">
               <p style="margin:0;"><strong>Chetanpura Meet</strong><br>AI & Automation Engineer<br><a href="https://wa.me/919998471715" style="color:#22d3ee;text-decoration:none;">WhatsApp Chat</a></p>
             </div>
           </div>
@@ -142,18 +152,25 @@ module.exports = async (req, res) => {
       </html>
     `;
 
+    const clientText = `Thank you for contacting us, ${full_name}!\n\n` +
+      `Your message for ${service}:\n${message}\n\n` +
+      `We will reply to you as soon as possible.`;
+
     // 7. Fire off emails concurrently
     await Promise.all([
       transporter.sendMail({
         from: `"${siteName}" <${mailUser}>`,
         to: adminEmail,
+        replyTo: email,
         subject: `💼 Connection from ${full_name} (${service})`,
+        text: adminText,
         html: adminHtml,
       }),
       transporter.sendMail({
         from: `"${siteName}" <${mailUser}>`,
         to: email,
         subject: `Thanks for connecting with me!`,
+        text: clientText,
         html: clientHtml,
       }),
     ]);

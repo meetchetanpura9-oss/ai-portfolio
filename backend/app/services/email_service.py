@@ -66,6 +66,7 @@ def _admin_html(contact: Contact, settings: Settings) -> str:
 
 
 def _client_auto_reply_html(contact: Contact, settings: Settings) -> str:
+    safe_message = html.escape(contact.message).replace("\n", "<br>")
     return f"""
     <html>
       <body style="margin:0;font-family:Arial,sans-serif;background:#0A0A0F;color:#eee;padding:24px;">
@@ -74,6 +75,12 @@ def _client_auto_reply_html(contact: Contact, settings: Settings) -> str:
           <p style="line-height:1.7;color:#ddd;font-size:15px;margin:0;">
             Your message has been received successfully. We are connecting with you shortly.
           </p>
+
+          <div style="margin-top:18px;padding:18px;background:#0A0A0F;border-radius:12px;border:1px solid #2a2a3a;">
+            <p style="margin:0 0 8px;color:#a78bfa;font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">Your submitted message</p>
+            <p style="margin:0;line-height:1.7;color:#eee;white-space:pre-wrap;">{safe_message}</p>
+          </div>
+
           <p style="line-height:1.7;color:#aaa;font-size:14px;margin:18px 0 0;">
             You do not need to submit the form again. We will reply to this email address as soon as possible.
           </p>

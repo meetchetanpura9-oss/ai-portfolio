@@ -1,34 +1,67 @@
 """
-Contact form API — validate, persist, notify.
+Contact form API — validate, persist, notify, status updates, and reports generation.
 """
 
-import csv
-import html
 import io
 import logging
+import urllib.request
+import json
 from datetime import datetime
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+from fastapi.responses import StreamingResponse
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.core.admin_auth import verify_admin_key
-from app.core.config import get_settings
 from app.database.db import get_db
 from app.models.contact_model import Contact
+from app.models.user_model import User
 from app.schemas.contact_schema import (
     ContactCreate,
-    ContactListItem,
     ContactResponse,
 )
-from app.services.csv_storage import append_contact_to_csv, get_csv_path
-from app.services.email_service import send_contact_emails
+from app.services.email_delivery import deliver_contact_emails
+from app.services.auth_service import get_current_user
 from app.services.rate_limiter import enforce_rate_limit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Contact"])
 
+def get_client_ip(request: Request) -> str:
+    """Extract real client IP (supports proxy headers)."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+    return request.client.host if request.client else "127.0.0.1"
+
+def resolve_contact_country(contact_id: int, ip: str, db_session_maker) -> None:
+    """Resolve geolocation for contact submission in the background."""
+    if not ip or ip in ["127.0.0.1", "localhost", "::1"]:
+        return
+        
+    try:
+        url = f"http://ip-api.com/json/{ip}?fields=status,country"
+        with urllib.request.urlopen(url, timeout=5) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            if data.get("status") == "success" and data.get("country"):
+                country = data.get("country")
+                db = db_session_maker()
+                try:
+                    c = db.query(Contact).filter(Contact.id == contact_id).first()
+                    if c:
+                        c.country = country
+                        db.commit()
+                        logger.info(f"Resolved contact ip {ip} to {country}")
+                except Exception as db_err:
+                    db.rollback()
+                    logger.error(f"Failed to update contact country: {db_err}")
+                finally:
+                    db.close()
+    except Exception as e:
+        logger.error(f"Contact country resolution error: {e}")
 
 @router.post(
     "/contact",
@@ -39,18 +72,26 @@ router = APIRouter(tags=["Contact"])
 async def submit_contact(
     payload: ContactCreate,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    """
+    Handle contact submissions. Saves details in Postgres, resolves IP, and triggers notification emails.
+    """
     enforce_rate_limit(request)
-    settings = get_settings()
+    
+    ip = get_client_ip(request)
 
     contact = Contact(
         full_name=payload.full_name,
-        email=payload.email.lower(),
+        email=payload.email.lower().strip(),
         phone=payload.phone,
         company=payload.company,
         service=payload.service,
         message=payload.message,
+        ip_address=ip,
+        country="Unknown",
+        status="new"
     )
 
     try:
@@ -65,17 +106,11 @@ async def submit_contact(
             detail="Unable to save your message. Please try again later.",
         ) from exc
 
-    # Always append to CSV (Excel) — primary export for admin
-    try:
-        append_contact_to_csv(contact)
-    except Exception as exc:
-        logger.exception("CSV save failed: %s", exc)
+    # Geolocation lookup background task
+    background_tasks.add_task(resolve_contact_country, contact.id, ip, get_db.__wrapped__)
 
-    # Optional Gmail notification (only if MAIL_PASSWORD is set)
-    try:
-        await send_contact_emails(contact, settings)
-    except Exception as exc:
-        logger.exception("Email notification failed: %s", exc)
+    # Async email notification task (dynamic Resend API with SMTP fallback)
+    background_tasks.add_task(deliver_contact_emails, contact, request.app.extra.get("settings") or request.app.state.settings)
 
     return ContactResponse(
         id=contact.id,
@@ -83,226 +118,180 @@ async def submit_contact(
         created_at=contact.created_at,
     )
 
+# --- Admin Dashboards Routing ---
 
 @router.get(
-    "/contact",
-    response_model=list[ContactListItem],
-    summary="List all contact submissions (JSON)",
-    dependencies=[Depends(verify_admin_key)],
+    "/admin/contacts",
+    summary="List all contact submissions",
 )
 def list_contacts(
     skip: int = 0,
     limit: int = 100,
+    search: str | None = None,
+    status_filter: str | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    contacts = (
-        db.query(Contact)
-        .order_by(Contact.created_at.desc())
-        .offset(skip)
-        .limit(min(limit, 500))
-        .all()
-    )
-    return contacts
-
-
-@router.get(
-    "/admin/contacts",
-    response_class=HTMLResponse,
-    summary="Admin page for contact submissions",
-    dependencies=[Depends(verify_admin_key)],
-)
-def admin_contacts_page(
-    admin_key: str | None = Query(default=None),
-    skip: int = 0,
-    limit: int = 200,
-    db: Session = Depends(get_db),
-):
-    contacts = (
-        db.query(Contact)
-        .order_by(Contact.created_at.desc())
-        .offset(skip)
-        .limit(min(limit, 500))
-        .all()
-    )
-    total = db.query(Contact).count()
-    key_query = f"?admin_key={html.escape(admin_key)}" if admin_key else ""
-    rows = []
-
-    for contact in contacts:
-        created_at = contact.created_at.strftime("%Y-%m-%d %H:%M") if contact.created_at else ""
-        rows.append(
-            f"""
-            <tr>
-              <td>{contact.id}</td>
-              <td><strong>{html.escape(contact.full_name)}</strong></td>
-              <td><a href="mailto:{html.escape(contact.email)}">{html.escape(contact.email)}</a></td>
-              <td>{html.escape(contact.phone)}</td>
-              <td>{html.escape(contact.company or "-")}</td>
-              <td>{html.escape(contact.service)}</td>
-              <td class="message">{html.escape(contact.message)}</td>
-              <td>{created_at}</td>
-            </tr>
-            """
-        )
-
-    table_rows = "\n".join(rows) or """
-      <tr>
-        <td colspan="8" class="empty">No contact submissions yet.</td>
-      </tr>
     """
-
-    return f"""
-    <!doctype html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Contact Submissions</title>
-        <style>
-          :root {{ color-scheme: dark; }}
-          body {{
-            margin: 0;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #080812;
-            color: #f5f5f7;
-          }}
-          main {{ max-width: 1280px; margin: 0 auto; padding: 32px 20px; }}
-          header {{
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 24px;
-          }}
-          h1 {{ margin: 0; font-size: clamp(28px, 4vw, 44px); }}
-          p {{ margin: 8px 0 0; color: #9ca3af; }}
-          a.button {{
-            border: 1px solid rgba(167, 139, 250, .35);
-            border-radius: 10px;
-            color: #ddd6fe;
-            padding: 10px 14px;
-            text-decoration: none;
-            background: rgba(139, 92, 246, .12);
-            white-space: nowrap;
-          }}
-          .table-wrap {{
-            overflow-x: auto;
-            border: 1px solid rgba(255,255,255,.1);
-            border-radius: 14px;
-            background: rgba(255,255,255,.04);
-          }}
-          table {{ width: 100%; border-collapse: collapse; min-width: 1100px; }}
-          th, td {{
-            border-bottom: 1px solid rgba(255,255,255,.08);
-            padding: 12px 14px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 14px;
-          }}
-          th {{
-            position: sticky;
-            top: 0;
-            background: #151526;
-            color: #c4b5fd;
-            font-size: 12px;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-          }}
-          td {{ color: #e5e7eb; }}
-          td a {{ color: #93c5fd; }}
-          .message {{ max-width: 320px; white-space: pre-wrap; color: #cbd5e1; }}
-          .empty {{ padding: 40px; text-align: center; color: #9ca3af; }}
-          @media (max-width: 720px) {{
-            header {{ align-items: start; flex-direction: column; }}
-          }}
-        </style>
-      </head>
-      <body>
-        <main>
-          <header>
-            <div>
-              <h1>Contact Submissions</h1>
-              <p>{total} total clients/messages saved in PostgreSQL.</p>
-            </div>
-            <a class="button" href="/contact/export{key_query}">Download CSV</a>
-          </header>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Company</th>
-                  <th>Service</th>
-                  <th>Message</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>{table_rows}</tbody>
-            </table>
-          </div>
-        </main>
-      </body>
-    </html>
+    Retrieve contact submissions. Supports message/name search filters, pagination, and status filters.
     """
-
-
-@router.get(
-    "/contact/export",
-    summary="Download all submissions as CSV (opens in Excel)",
-    dependencies=[Depends(verify_admin_key)],
-)
-def export_contacts_csv(db: Session = Depends(get_db)):
-    contacts = db.query(Contact).order_by(Contact.created_at.desc()).all()
-
-    buffer = io.StringIO()
-    writer = csv.writer(buffer)
-    writer.writerow(
-        [
-            "id",
-            "full_name",
-            "email",
-            "phone",
-            "company",
-            "service",
-            "message",
-            "created_at",
-        ]
-    )
-    for c in contacts:
-        writer.writerow(
-            [
-                c.id,
-                c.full_name,
-                c.email,
-                c.phone,
-                c.company or "",
-                c.service,
-                c.message,
-                c.created_at.isoformat() if c.created_at else "",
-            ]
+    query = db.query(Contact)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Contact.full_name.ilike(search_term)) |
+            (Contact.email.ilike(search_term)) |
+            (Contact.message.ilike(search_term)) |
+            (Contact.company.ilike(search_term))
         )
-
-    buffer.seek(0)
-    filename = f"contact_submissions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    return StreamingResponse(
-        iter([buffer.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
-
-
-@router.get(
-    "/contact/csv-info",
-    summary="Path to the live CSV file (Excel)",
-    dependencies=[Depends(verify_admin_key)],
-)
-def csv_file_info():
-    path = get_csv_path()
+        
+    if status_filter:
+        query = query.filter(Contact.status == status_filter.lower())
+        
+    contacts = query.order_by(Contact.created_at.desc()).offset(skip).limit(limit).all()
+    total = query.count()
+    
     return {
-        "csv_path": str(path.resolve()),
-        "exists": path.exists(),
-        "hint": "Open this file in Excel — new form rows append automatically.",
+        "contacts": [
+            {
+                "id": c.id,
+                "full_name": c.full_name,
+                "email": c.email,
+                "phone": c.phone,
+                "company": c.company,
+                "service": c.service,
+                "message": c.message,
+                "ip_address": c.ip_address,
+                "country": c.country,
+                "status": c.status,
+                "created_at": c.created_at,
+            }
+            for c in contacts
+        ],
+        "total": total
     }
+
+@router.patch(
+    "/admin/contacts/{contact_id}",
+    summary="Update submission status",
+)
+def update_contact_status(
+    contact_id: int,
+    status_payload: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update the processing status (new, read, replied) of a submission.
+    """
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact submission not found"
+        )
+        
+    new_status = status_payload.get("status", "").lower()
+    if new_status not in ["new", "read", "replied"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid status. Choose from: new, read, replied"
+        )
+        
+    contact.status = new_status
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database update error: {e}"
+        )
+        
+    return {"status": "updated", "contact_id": contact.id, "new_status": new_status}
+
+@router.delete(
+    "/admin/contacts/{contact_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a submission",
+)
+def delete_contact(
+    contact_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Delete a contact submission permanently from PostgreSQL database.
+    """
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact submission not found"
+        )
+        
+    try:
+        db.delete(contact)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database deletion error: {e}"
+        )
+    return None
+
+# --- Report Downloads endpoints ---
+
+@router.get(
+    "/admin/export/csv",
+    summary="Download submissions as CSV",
+)
+def export_contacts_csv(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate and stream all contact form submissions as an Excel-compatible CSV.
+    """
+    from app.services.export_service import generate_contacts_csv
+    
+    contacts = db.query(Contact).order_by(Contact.created_at.desc()).all()
+    csv_data = generate_contacts_csv(contacts)
+    
+    filename = f"contacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        iter([csv_data]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        },
+    )
+
+@router.get(
+    "/admin/export/excel",
+    summary="Download submissions as Excel",
+)
+def export_contacts_excel(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate and stream all contact form submissions as a fully styled Excel (.xlsx) sheet.
+    """
+    from app.services.export_service import generate_contacts_excel
+    
+    contacts = db.query(Contact).order_by(Contact.created_at.desc()).all()
+    excel_data = generate_contacts_excel(contacts)
+    
+    filename = f"contacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return StreamingResponse(
+        io.BytesIO(excel_data),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        },
+    )

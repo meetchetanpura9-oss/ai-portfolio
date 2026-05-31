@@ -58,6 +58,9 @@ class Settings(BaseSettings):
 
     # Optional: protect GET /contact and /contact/export (set a long random string)
     ADMIN_API_KEY: str = ""
+    
+    # Resend API Key for SaaS email notifications
+    RESEND_API_KEY: str = ""
 
     @property
     def cors_origins(self) -> List[str]:
