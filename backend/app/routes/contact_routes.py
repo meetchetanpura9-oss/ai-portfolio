@@ -37,7 +37,7 @@ def get_client_ip(request: Request) -> str:
         return real_ip
     return request.client.host if request.client else "127.0.0.1"
 
-def resolve_contact_country(contact_id: int, ip: str, db_session_maker) -> None:
+def resolve_contact_country(contact_id: int, ip: str) -> None:
     """Resolve geolocation for contact submission in the background."""
     if not ip or ip in ["127.0.0.1", "localhost", "::1"]:
         return
@@ -48,7 +48,8 @@ def resolve_contact_country(contact_id: int, ip: str, db_session_maker) -> None:
             data = json.loads(response.read().decode("utf-8"))
             if data.get("status") == "success" and data.get("country"):
                 country = data.get("country")
-                db = db_session_maker()
+                from app.database.connection import SessionLocal
+                db = SessionLocal()
                 try:
                     c = db.query(Contact).filter(Contact.id == contact_id).first()
                     if c:
@@ -107,7 +108,7 @@ async def submit_contact(
         ) from exc
 
     # Geolocation lookup background task
-    background_tasks.add_task(resolve_contact_country, contact.id, ip, get_db.__wrapped__)
+    background_tasks.add_task(resolve_contact_country, contact.id, ip)
 
     # Async email notification task (dynamic Resend API with SMTP fallback)
     background_tasks.add_task(deliver_contact_emails, contact, request.app.extra.get("settings") or request.app.state.settings)

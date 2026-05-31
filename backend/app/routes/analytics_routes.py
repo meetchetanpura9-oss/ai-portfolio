@@ -27,7 +27,7 @@ def get_client_ip(request: Request) -> str:
         return real_ip
     return request.client.host if request.client else "127.0.0.1"
 
-def resolve_ip_country(ip: str, analytics_id: int, db_session_maker) -> None:
+def resolve_ip_country(ip: str, analytics_id: int) -> None:
     """Resolve IP country geolocation in background thread to avoid request blocking."""
     if not ip or ip in ["127.0.0.1", "localhost", "::1"]:
         return
@@ -40,7 +40,8 @@ def resolve_ip_country(ip: str, analytics_id: int, db_session_maker) -> None:
                 country_name = data.get("country")
                 
                 # Update DB record with resolved country
-                db = db_session_maker()
+                from app.database.connection import SessionLocal
+                db = SessionLocal()
                 try:
                     record = db.query(Analytics).filter(Analytics.id == analytics_id).first()
                     if record:
@@ -79,8 +80,7 @@ def track_visitor(
     db.refresh(analytics)
     
     # Queue geo-lookup in a background task
-    # We pass database session generator so background task can establish a separate session cleanly
-    background_tasks.add_task(resolve_ip_country, ip, analytics.id, get_db.__wrapped__)
+    background_tasks.add_task(resolve_ip_country, ip, analytics.id)
     
     return {"status": "logged"}
 
