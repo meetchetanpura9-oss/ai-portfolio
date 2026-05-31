@@ -9,10 +9,20 @@ from app.routes.contact_routes import router as contact_router
 from app.routes.project_routes import router as project_router
 from app.routes.metrics_routes import router as metrics_router
 from app.routes.playground_routes import router as playground_router
+from app.database.connection import Base, engine
+from app.models.contact_model import Contact  # noqa: F401
+from app.models.project_model import Project  # noqa: F401
 
 logging.basicConfig(level=logging.INFO)
 
 settings = get_settings()
+
+# Automatically create/verify database tables on application startup
+try:
+    Base.metadata.create_all(bind=engine)
+    logging.info("Database tables verified/created successfully.")
+except Exception as e:
+    logging.error(f"Error during database table auto-creation: {e}")
 
 app = FastAPI(
     title="AI Portfolio API",
