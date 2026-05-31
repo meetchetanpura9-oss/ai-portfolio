@@ -154,7 +154,7 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminName");
-    window.location.hash = "#login"; // Redirect to login
+    window.history.pushState(null, "", "/login"); // Redirect to login
   };
 
   const adminName = localStorage.getItem("adminName") || "Administrator";

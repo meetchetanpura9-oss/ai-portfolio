@@ -5,6 +5,7 @@ import Navbar from "./Navbar";
 import Typewriter from "./Typewriter";
 import HeroButtons from "./HeroButtons";
 import FloatingBadge from "./FloatingBadge";
+import TiltCard from "./effects/TiltCard";
 
 const ROLES = [
   "AI Automation Solutions",
@@ -56,7 +57,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-surface text-white">
+    <div className="relative min-h-screen overflow-hidden bg-void text-white">
       <AnimatedBackground />
       <Navbar />
 
@@ -65,25 +66,25 @@ export default function Hero() {
         className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-12 lg:pb-24 lg:pt-36"
       >
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
-          <div className="order-2 lg:order-1">
+          <div className="order-2 lg:order-1 text-left">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 backdrop-blur-md sm:gap-3 sm:px-4 sm:py-2"
+              className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 backdrop-blur-md sm:gap-3 sm:px-4 sm:py-2"
             >
               <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
               </span>
-              <span className="text-xs text-gray-300 sm:text-sm">Open to opportunities</span>
+              <span className="text-xs text-cyan-300 font-mono sm:text-sm">Open to opportunities</span>
             </motion.div>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.15 }}
-              className="mb-2 text-base text-gray-500 sm:text-lg"
+              className="mb-2 text-base text-gray-500 sm:text-lg font-mono"
             >
               Hello, I&apos;m
             </motion.p>
@@ -92,14 +93,14 @@ export default function Hero() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.6 }}
-              className="text-[11vw] xs:text-5xl font-semibold leading-[0.98] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl font-display"
+              className="text-[11vw] xs:text-5xl font-extrabold leading-[0.98] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl font-display"
             >
-              <span className="block">Meet Chetanpura</span>
+              <span className="block bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">Meet Chetanpura</span>
               <span className="mt-5 flex flex-wrap items-center gap-2 sm:gap-3">
                 {TAGLINE_WORDS.map((word) => (
                   <span
                     key={word}
-                    className="rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-xs font-semibold text-gray-100 shadow-[0_0_28px_rgba(139,92,246,0.12)] backdrop-blur-md xs:text-sm sm:px-4 sm:text-xl lg:text-2xl"
+                    className="rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-semibold text-gray-300 shadow-[0_0_28px_rgba(139,92,246,0.12)] backdrop-blur-md xs:text-sm sm:px-4 sm:text-xl lg:text-2xl"
                   >
                     {word}
                   </span>
@@ -107,11 +108,19 @@ export default function Hero() {
               </span>
             </motion.h1>
 
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="mt-6 text-sm sm:text-base md:text-lg font-bold text-cyan-300 tracking-wider font-mono uppercase"
+            >
+              AI Engineer | Automation Specialist | Full Stack Developer
+            </motion.p>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mt-6 text-xl font-semibold text-gray-400 sm:text-2xl lg:text-3xl"
+              transition={{ delay: 0.45 }}
+              className="mt-4 text-lg font-semibold text-gray-400 sm:text-xl lg:text-2xl font-display"
             >
               <span className="text-gray-500">I deliver</span>
               <Typewriter
@@ -206,35 +215,37 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Glowing Outer Gradient Border Frame */}
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
-                className="relative mx-auto aspect-square w-full rounded-[2rem] p-[2.5px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_50px_rgba(139,92,246,0.25)] hover:shadow-[0_0_70px_rgba(139,92,246,0.45)] transition-shadow duration-500"
-              >
-                {/* Inner Glassmorphic container */}
-                <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-[#070b1a]/90 p-1 backdrop-blur-xl">
-                  {/* Subtle Grid overlay for digital tech look */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none" />
-                  
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={HERO_IMAGES[activeImage]}
-                      src={HERO_IMAGES[activeImage]}
-                      alt="Meet Chetanpura - AI Engineer"
-                      initial={{ opacity: 0, scale: 1.03 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                      onError={(event) => {
-                        event.currentTarget.src = "/linkedin.png";
-                      }}
-                      className="h-full w-full rounded-[1.7rem] object-cover object-center transition-transform duration-700 hover:scale-105"
-                    />
-                  </AnimatePresence>
-                </div>
-              </motion.div>
+              {/* Glowing Outer Gradient Border Frame wrapped in TiltCard */}
+              <TiltCard maxTilt={10}>
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+                  className="relative mx-auto aspect-square w-full rounded-[2rem] p-[2.5px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_50px_rgba(139,92,246,0.25)] hover:shadow-[0_0_70px_rgba(139,92,246,0.45)] transition-shadow duration-500"
+                >
+                  {/* Inner Glassmorphic container */}
+                  <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-[#070b1a]/90 p-1 backdrop-blur-xl">
+                    {/* Subtle Grid overlay for digital tech look */}
+                    <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none" />
+                    
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={HERO_IMAGES[activeImage]}
+                        src={HERO_IMAGES[activeImage]}
+                        alt="Meet Chetanpura - AI Engineer"
+                        initial={{ opacity: 0, scale: 1.03 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                        onError={(event) => {
+                          event.currentTarget.src = "/linkedin.png";
+                        }}
+                        className="h-full w-full rounded-[1.7rem] object-cover object-center transition-transform duration-700 hover:scale-105"
+                      />
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              </TiltCard>
 
               {/* Premium pagination dots indicator */}
               <div className="mt-5 flex justify-center gap-2 relative z-20">

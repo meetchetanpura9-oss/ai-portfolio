@@ -18,19 +18,30 @@ import Newsletter from "./components/Newsletter";
 import { api } from "./lib/api";
 
 function App() {
-  const [route, setRoute] = useState(window.location.hash);
+  const [route, setRoute] = useState(window.location.pathname);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      setRoute(window.location.hash);
+    const handleLocationChange = () => {
+      setRoute(window.location.pathname);
     };
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener("popstate", handleLocationChange);
+
+    // Intercept pushState calls so react state updates instantly
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      handleLocationChange();
+    };
+
+    return () => {
+      window.removeEventListener("popstate", handleLocationChange);
+      window.history.pushState = originalPushState;
+    };
   }, []);
 
   useEffect(() => {
     // Only track visitors on the public portfolio
-    if (route === "#login" || route === "#admin") return;
+    if (route === "/login" || route === "/admin") return;
 
     const trackVisitor = async () => {
       // Basic session-level throttle to avoid double-pings on the same session load
@@ -68,16 +79,16 @@ function App() {
   }, [route]);
 
   // Routing Logic
-  if (route === "#login") {
-    return <AdminLogin onLoginSuccess={() => (window.location.hash = "#admin")} />;
+  if (route === "/login") {
+    return <AdminLogin onLoginSuccess={() => window.history.pushState(null, "", "/admin")} />;
   }
 
-  if (route === "#admin") {
+  if (route === "/admin") {
     const token = localStorage.getItem("adminToken");
     if (!token) {
       // Redirect to login
       setTimeout(() => {
-        window.location.hash = "#login";
+        window.history.pushState(null, "", "/login");
       }, 0);
       return (
         <div className="flex min-h-screen items-center justify-center bg-[#050816] text-white">

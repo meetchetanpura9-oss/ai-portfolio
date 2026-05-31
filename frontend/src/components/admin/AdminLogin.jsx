@@ -32,6 +32,7 @@ export default function AdminLogin({ onLoginSuccess }) {
       localStorage.setItem("adminName", user_name);
       
       toast(`Welcome back, ${user_name}!`, "success");
+      window.history.pushState(null, "", "/admin");
       onLoginSuccess();
     } catch (err) {
       console.error("Login failed:", err);
@@ -122,16 +123,14 @@ export default function AdminLogin({ onLoginSuccess }) {
         </form>
 
         <div className="mt-8 text-center">
-          <a
-            href="#"
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = ""; // Switch back to portfolio
+          <button
+            onClick={() => {
+              window.history.pushState(null, "", "/");
             }}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors bg-transparent border-none outline-none cursor-pointer"
           >
             &larr; Back to Portfolio
-          </a>
+          </button>
         </div>
       </motion.div>
     </div>
