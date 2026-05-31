@@ -114,7 +114,7 @@ export default function Hero() {
               transition={{ delay: 0.35, duration: 0.5 }}
               className="mt-6 text-sm sm:text-base md:text-lg font-bold text-cyan-300 tracking-wider font-mono uppercase"
             >
-              AI Engineer | Automation Specialist | Full Stack Developer
+              AI Engineer | Automation Specialist | Data Analyst
             </motion.p>
             <motion.h2
               initial={{ opacity: 0 }}
