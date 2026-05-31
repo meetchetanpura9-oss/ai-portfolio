@@ -62,7 +62,19 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> List[str]:
         origins = [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
-        if not origins or origins == ["*"]:
+        
+        # Hardcode fallback allowed origins for seamless production/development integration
+        fallbacks = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            "https://ai-portfolio-dusky-zeta.vercel.app"
+        ]
+        for f in fallbacks:
+            if f not in origins:
+                origins.append(f)
+
+        if not origins or "*" in origins:
             return ["*"]
         return origins
 

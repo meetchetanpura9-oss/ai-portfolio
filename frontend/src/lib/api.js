@@ -17,6 +17,10 @@ function isLocalApiUrl(url) {
 
 function resolveBaseURL() {
   const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+  
+  // Debug log to confirm environment variable loading on Vercel
+  console.log("VITE_API_URL Raw Env:", import.meta.env.VITE_API_URL);
+  console.log("Resolved Portfolio API Base URL:", envUrl || "/api (Vercel Serverless Fallback)");
 
   // If a specific backend URL is configured (e.g. Render), use it!
   if (envUrl) {
