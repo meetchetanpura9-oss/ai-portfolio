@@ -23,6 +23,9 @@ class Contact(Base):
     ip_address = Column(String(45), nullable=True)
     country = Column(String(100), default="Unknown", nullable=True)
     status = Column(String(50), default="new", nullable=False) # e.g. new, read, replied
+    notification_status = Column(String(50), default="pending", nullable=False) # e.g. pending, sent, failed
+    notification_error = Column(Text, nullable=True)
+    inquiry_type = Column(String(50), nullable=True) # e.g. hiring, collaboration, consultation, spam, general
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

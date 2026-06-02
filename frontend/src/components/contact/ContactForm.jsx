@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { HiPaperAirplane } from "react-icons/hi";
 import { submitContact } from "../../lib/api";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../hooks/useToast";
 import { INITIAL_FORM, SERVICE_OPTIONS } from "./constants";
 import { FloatingInput, FloatingSelect, FloatingTextarea } from "./FloatingField";
 import SuccessState from "./SuccessState";

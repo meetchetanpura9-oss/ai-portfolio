@@ -38,19 +38,19 @@ const socialLinks = [
     href: CONTACT_LINKS.whatsapp,
     icon: FaWhatsapp,
     label: "WhatsApp",
-    text: CONTACT_LINKS.whatsapp.replace(/^https?:\/\//, ""),
+    text: "+91 99984 71715",
   },
   {
     href: CONTACT_LINKS.linkedin,
     icon: FaLinkedin,
     label: "LinkedIn",
-    text: CONTACT_LINKS.linkedin.replace(/^https?:\/\//, ""),
+    text: "@chetanpurameet",
   },
   {
     href: CONTACT_LINKS.github,
     icon: FaGithub,
     label: "GitHub",
-    text: CONTACT_LINKS.github.replace(/^https?:\/\//, ""),
+    text: "@meetchetanpura9-oss",
   },
 ];
 

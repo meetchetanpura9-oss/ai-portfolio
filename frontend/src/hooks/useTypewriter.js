@@ -12,8 +12,10 @@ export function useTypewriter(words, { typingSpeed = 80, deletingSpeed = 45, pau
     if (!isDeleting && text === current) {
       timeout = setTimeout(() => setIsDeleting(true), pauseMs);
     } else if (isDeleting && text === "") {
-      setIsDeleting(false);
-      setWordIndex((i) => (i + 1) % words.length);
+      timeout = setTimeout(() => {
+        setIsDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
+      }, 0);
     } else {
       const next = isDeleting
         ? current.slice(0, text.length - 1)

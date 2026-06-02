@@ -1,7 +1,7 @@
-import { useSmoothScroll } from "../../context/SmoothScrollContext";
+import { useScrollProgress } from "../../hooks/useSmoothScroll";
 
 export default function ScrollProgress() {
-  const { progress } = useSmoothScroll();
+  const progress = useScrollProgress();
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] h-1 bg-white/5 backdrop-blur-xl">

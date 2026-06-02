@@ -1,9 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-const SmoothScrollContext = createContext({
-  scrollTo: () => {},
-  progress: 0,
-});
+import { useEffect, useMemo, useState } from "react";
+import { ScrollActionsContext, ScrollProgressContext, SmoothScrollContext } from "./ScrollContexts";
 
 export function SmoothScrollProvider({ children }) {
   const [progress, setProgress] = useState(0);
@@ -43,11 +39,15 @@ export function SmoothScrollProvider({ children }) {
     []
   );
 
-  const value = useMemo(() => ({ scrollTo, progress }), [scrollTo, progress]);
+  const smoothScrollValue = useMemo(() => ({ scrollTo, progress }), [scrollTo, progress]);
 
-  return <SmoothScrollContext.Provider value={value}>{children}</SmoothScrollContext.Provider>;
-}
-
-export function useSmoothScroll() {
-  return useContext(SmoothScrollContext);
+  return (
+    <ScrollActionsContext.Provider value={scrollTo}>
+      <ScrollProgressContext.Provider value={progress}>
+        <SmoothScrollContext.Provider value={smoothScrollValue}>
+          {children}
+        </SmoothScrollContext.Provider>
+      </ScrollProgressContext.Provider>
+    </ScrollActionsContext.Provider>
+  );
 }

@@ -83,6 +83,9 @@ async def submit_contact(
     
     ip = get_client_ip(request)
 
+    from app.utils.classifier import classify_inquiry
+    inquiry_tag = classify_inquiry(payload.message, payload.service)
+
     contact = Contact(
         full_name=payload.full_name,
         email=payload.email.lower().strip(),
@@ -92,7 +95,9 @@ async def submit_contact(
         message=payload.message,
         ip_address=ip,
         country="Unknown",
-        status="new"
+        status="new",
+        inquiry_type=inquiry_tag,
+        notification_status="pending"
     )
 
     try:
@@ -111,7 +116,7 @@ async def submit_contact(
     background_tasks.add_task(resolve_contact_country, contact.id, ip)
 
     # Async email notification task (dynamic Resend API with SMTP fallback)
-    background_tasks.add_task(deliver_contact_emails, contact, request.app.extra.get("settings") or request.app.state.settings)
+    background_tasks.add_task(deliver_contact_emails, contact.id)
 
     return ContactResponse(
         id=contact.id,
@@ -166,6 +171,9 @@ def list_contacts(
                 "ip_address": c.ip_address,
                 "country": c.country,
                 "status": c.status,
+                "notification_status": c.notification_status,
+                "notification_error": c.notification_error,
+                "inquiry_type": c.inquiry_type,
                 "created_at": c.created_at,
             }
             for c in contacts

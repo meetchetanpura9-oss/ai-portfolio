@@ -15,6 +15,7 @@ export default function MouseGlow() {
       y: window.innerHeight / 2,
     };
 
+    let rafId;
     const update = () => {
       const target = pointerRef.current;
       const pos = positionRef.current;
@@ -29,7 +30,7 @@ export default function MouseGlow() {
         glowRef.current.style.opacity = target.visible ? "1" : "0";
       }
 
-      requestAnimationFrame(update);
+      rafId = requestAnimationFrame(update);
     };
 
     const handleMove = (event) => {
@@ -47,7 +48,7 @@ export default function MouseGlow() {
     window.addEventListener("mousemove", handleMove, { passive: true });
     document.documentElement.addEventListener("mouseleave", handleLeave, { passive: true });
 
-    const rafId = requestAnimationFrame(update);
+    rafId = requestAnimationFrame(update);
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMove);

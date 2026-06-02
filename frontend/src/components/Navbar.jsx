@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
-import { useSmoothScroll } from "../context/SmoothScrollContext";
+import { useScrollTo } from "../hooks/useSmoothScroll";
 
 const links = [
   { label: "Home", href: "#hero" },
@@ -13,32 +13,34 @@ const links = [
 ];
 
 export default function Navbar() {
-  const { scrollTo } = useSmoothScroll();
+  const scrollTo = useScrollTo();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [activeSection, setActiveSection] = useState("hero");
 
   const handleNav = (href) => {
-    // 1. Initiate smooth scrolling first
-    scrollTo(href, { offset: -80, duration: 1.3 });
+    // 1. Close menu first to restore body/html scrollability immediately so the page can scroll
+    setOpen(false);
     
-    // 2. Delay menu closing to prevent mobile browsers (like iOS Safari) 
-    // from canceling the scroll when the clicked element is unmounted.
+    // 2. Initiate smooth scrolling after a micro-delay to let the browser process the overflow style change
     setTimeout(() => {
-      setOpen(false);
-    }, 150);
+      scrollTo(href, { offset: -80 });
+    }, 30);
   };
 
-  // Lock body scroll when mobile menu is open
+  // Lock body & document scroll when mobile menu is open (for robust iOS support)
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [open]);
 
@@ -167,7 +169,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "spring", bounce: 0.05, duration: 0.55 }}
-            className="fixed inset-0 z-40 flex flex-col bg-[#050816]/98 backdrop-blur-2xl md:hidden"
+            className="fixed inset-0 z-[60] flex flex-col bg-[#050816]/98 backdrop-blur-2xl md:hidden"
           >
             {/* Header spacer in full-screen overlay */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#050816]/50">

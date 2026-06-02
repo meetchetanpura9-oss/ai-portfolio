@@ -25,7 +25,7 @@ def _mail_config(settings: Settings):
         MAIL_STARTTLS=settings.MAIL_STARTTLS,
         MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
         USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True,
+        VALIDATE_CERTS=False,
     )
 
 
@@ -71,9 +71,9 @@ def _client_auto_reply_html(contact: Contact, settings: Settings) -> str:
     <html>
       <body style="margin:0;font-family:Arial,sans-serif;background:#0A0A0F;color:#eee;padding:24px;">
         <div style="max-width:560px;margin:0 auto;background:#14141f;border:1px solid #333;border-radius:14px;padding:28px;">
-          <h2 style="color:#a78bfa;margin:0 0 16px;">Thank you for filling out the form, {html.escape(contact.full_name)}!</h2>
+          <h2 style="color:#a78bfa;margin:0 0 16px;">Thanks for filling out this form!</h2>
           <p style="line-height:1.7;color:#ddd;font-size:15px;margin:0;">
-            Your message has been received successfully. We are connecting with you shortly.
+            We are connecting with you shortly. Your message has been received successfully.
           </p>
 
           <div style="margin-top:18px;padding:18px;background:#0A0A0F;border-radius:12px;border:1px solid #2a2a3a;">

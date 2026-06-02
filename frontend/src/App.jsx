@@ -10,7 +10,6 @@ import Skills from "./components/Skills";
 import Services from "./components/Services";
 import WhyWorkWithMe from "./components/WhyWorkWithMe";
 import ContactSection from "./components/contact/ContactSection";
-import SystemMetrics from "./components/effects/SystemMetrics";
 import MouseGlow from "./components/effects/MouseGlow";
 import AdminLogin from "./components/admin/AdminLogin";
 import AdminDashboard from "./components/admin/AdminDashboard";
@@ -130,7 +129,7 @@ function App() {
                     Meet Chetanpura
                   </h3>
                   <p className="text-sm text-gray-400 max-w-md leading-relaxed">
-                    AI Research Engineer & Full-Stack Developer building high-performance 
+                    AI Research Engineer & Data Analyst building high-performance 
                     distributed systems, autonomous agents, and enterprise-grade SaaS models.
                   </p>
                 </div>
@@ -139,12 +138,11 @@ function App() {
                 </div>
               </div>
 
-              {/* Bottom Copyright & Metrics */}
-              <div className="flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-8 md:flex-row">
+              {/* Bottom Copyright */}
+              <div className="flex flex-col items-center justify-center border-t border-white/5 pt-8 text-center">
                 <p className="text-sm text-gray-500">
                   &copy; {new Date().getFullYear()} Meet Chetanpura. All rights reserved.
                 </p>
-                <SystemMetrics />
               </div>
             </div>
           </footer>

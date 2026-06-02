@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiOutlineMail, HiOutlineCheckCircle } from "react-icons/hi";
 import { api } from "../lib/api";
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../hooks/useToast";
 
 export default function Newsletter() {
   const { toast } = useToast();

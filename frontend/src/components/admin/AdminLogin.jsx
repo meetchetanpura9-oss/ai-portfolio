@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { HiOutlineLockClosed, HiOutlineMail } from "react-icons/hi";
 import { api } from "../../lib/api";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../hooks/useToast";
 
 export default function AdminLogin({ onLoginSuccess }) {
   const { toast } = useToast();

@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { HiArrowRight, HiDownload } from "react-icons/hi";
+import { useScrollTo } from "../hooks/useSmoothScroll";
 
 const btnBase =
   "relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl px-6 py-3.5 text-sm font-semibold sm:px-8 sm:py-4 sm:text-base";
 
 export default function HeroButtons() {
+  const scrollTo = useScrollTo();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -16,7 +19,7 @@ export default function HeroButtons() {
         href="#projects"
         onClick={(e) => {
           e.preventDefault();
-          document.querySelector("#projects")?.scrollIntoView({ behavior: "smooth" });
+          scrollTo("#projects", { offset: -80 });
         }}
         whileHover={{ scale: 1.03, y: -2 }}
         whileTap={{ scale: 0.98 }}

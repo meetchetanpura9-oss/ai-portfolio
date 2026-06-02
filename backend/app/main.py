@@ -39,6 +39,9 @@ try:
         conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)"))
         conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Unknown'"))
         conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'new'"))
+        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_status VARCHAR(50) DEFAULT 'pending'"))
+        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_error TEXT"))
+        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS inquiry_type VARCHAR(50)"))
         conn.commit()
         logging.info("Database migrations/patches applied successfully.")
 except Exception as e:

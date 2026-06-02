@@ -110,10 +110,10 @@ export function FloatingSelect({ id, label, value, onChange, error, required, op
 
       <label
         htmlFor={id}
-        className={`pointer-events-none absolute left-4 z-10 text-xs transition-all duration-300 ${
+        className={`pointer-events-none absolute left-4 z-10 origin-[0] text-xs transition-all duration-300 ${
           value
             ? "-translate-y-3 top-4 scale-75 text-violet-400"
-            : "top-4 scale-100 text-gray-500"
+            : "top-4 scale-100 text-gray-500 peer-focus:-translate-y-3 peer-focus:top-4 peer-focus:scale-75 peer-focus:text-violet-400"
         }`}
       >
         {label}

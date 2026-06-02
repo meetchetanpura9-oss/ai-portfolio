@@ -20,16 +20,16 @@ const ROLES = [
 ];
 
 const SKILLS = [
-  { label: "Python", className: "top-1 left-1 sm:top-0 sm:left-5", delay: 0.2, duration: 3.8 },
-  { label: "TensorFlow", className: "top-16 right-0 sm:top-24 sm:right-0", delay: 0.35, duration: 4.2 },
-  { label: "PyTorch", className: "top-[43%] -left-1 sm:-left-2", delay: 0.5, duration: 3.5 },
-  { label: "SQL", className: "bottom-24 left-1 sm:bottom-20 sm:left-0", delay: 0.65, duration: 4 },
-  { label: "Power BI", className: "bottom-4 right-5 sm:bottom-2 sm:right-10", delay: 0.8, duration: 3.9 },
+  { label: "Python", className: "top-1 left-1 sm:top-0 sm:left-5 hidden sm:block", delay: 0.2, duration: 3.8 },
+  { label: "TensorFlow", className: "top-16 right-0 sm:top-24 sm:right-0 hidden sm:block", delay: 0.35, duration: 4.2 },
+  { label: "PyTorch", className: "top-[43%] -left-1 sm:-left-2 hidden sm:block", delay: 0.5, duration: 3.5 },
+  { label: "SQL", className: "bottom-24 left-1 sm:bottom-20 sm:left-0 hidden sm:block", delay: 0.65, duration: 4 },
+  { label: "Power BI", className: "bottom-4 right-5 sm:bottom-2 sm:right-10 hidden sm:block", delay: 0.8, duration: 3.9 },
   { label: "LLMs", className: "bottom-[38%] right-0 hidden sm:block", delay: 0.95, duration: 4.3 },
 ];
 
 const HERO_IMAGES = [
-  "/linkedin.png",
+  "/linkedin.jpg",
   "/hero-2.png.jpeg",
   "/hero-3.png.jpeg",
   "/hero-4.png.jpeg",
@@ -66,7 +66,7 @@ export default function Hero() {
         className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-12 lg:pb-24 lg:pt-36"
       >
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
-          <div className="order-2 lg:order-1 text-left">
+          <div className="order-1 lg:order-1 text-left">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -133,23 +133,9 @@ export default function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.55 }}
-              className="mt-8 max-w-2xl text-base leading-8 text-gray-400 sm:text-lg"
+              className="mt-6 max-w-2xl text-base leading-relaxed text-gray-400 sm:text-lg"
             >
-              I build intelligent AI systems that automate workflows, transform data
-              into insights, and help businesses scale smarter.
-            </motion.p>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="mt-4 max-w-2xl text-sm leading-7 text-gray-500 sm:text-base"
-            >
-              I&apos;m Meet Chetanpura, an AI & Automation Engineer passionate about
-              building intelligent systems that solve real-world business problems.
-              I specialize in Python, Machine Learning, Deep Learning, Data Analytics,
-              and AI Automation to help businesses automate operations, improve
-              decision-making, and unlock growth through data-driven solutions.
+              I specialize in Python, Machine Learning, Deep Learning, Data Analytics, and AI Automation. I design and build intelligent systems that automate complex workflows, transform data into actionable insights, and solve real-world engineering challenges.
             </motion.p>
 
             <HeroButtons />
@@ -175,7 +161,7 @@ export default function Hero() {
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.35, duration: 0.7 }}
-            className="order-1 flex justify-center lg:order-2"
+            className="order-2 flex justify-center lg:order-2"
           >
             <div className="relative w-full max-w-[340px] sm:max-w-[440px] lg:max-w-[480px] px-4">
               {/* Outer Pulsing Glow */}
@@ -221,7 +207,7 @@ export default function Hero() {
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                   whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
-                  className="relative mx-auto aspect-square w-full rounded-[2rem] p-[2.5px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_50px_rgba(139,92,246,0.25)] hover:shadow-[0_0_70px_rgba(139,92,246,0.45)] transition-shadow duration-500"
+                  className="relative mx-auto aspect-[3/4] w-full rounded-[2rem] p-[2.5px] bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_50px_rgba(139,92,246,0.25)] hover:shadow-[0_0_70px_rgba(139,92,246,0.45)] transition-shadow duration-500"
                 >
                   {/* Inner Glassmorphic container */}
                   <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-[#070b1a]/90 p-1 backdrop-blur-xl">
@@ -238,7 +224,7 @@ export default function Hero() {
                         exit={{ opacity: 0, scale: 0.97 }}
                         transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                         onError={(event) => {
-                          event.currentTarget.src = "/linkedin.png";
+                          event.currentTarget.src = "/linkedin.jpg";
                         }}
                         className="h-full w-full rounded-[1.7rem] object-cover object-center transition-transform duration-700 hover:scale-105"
                       />

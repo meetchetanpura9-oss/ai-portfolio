@@ -1,10 +1,20 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const ORBIT_DURATION = 28;
 
 export default function OrbitingIcons({ icons, label = "AI Core" }) {
   const count = icons.length;
-  const radius = 110;
+  const [radius, setRadius] = useState(110);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setRadius(window.innerWidth < 640 ? 80 : 110);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="relative mx-auto aspect-square w-[min(300px,85vw)] max-w-[320px]">

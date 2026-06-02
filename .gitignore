@@ -38,3 +38,4 @@ coverage/
 # Ignore this folder if created locally
 backend/data/
 frontend/.env
+scratch/

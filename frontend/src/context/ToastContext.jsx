@@ -1,8 +1,7 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { HiCheckCircle, HiExclamationCircle, HiX } from "react-icons/hi";
-
-const ToastContext = createContext(null);
+import { ToastContext } from "./ToastContextInstance";
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
@@ -58,10 +57,4 @@ export function ToastProvider({ children }) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within ToastProvider");
-  return ctx;
 }

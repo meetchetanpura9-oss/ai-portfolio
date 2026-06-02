@@ -5,15 +5,6 @@
  */
 import axios from "axios";
 
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
-
-function isLocalApiUrl(url) {
-  try {
-    return LOCAL_HOSTS.has(new URL(url).hostname);
-  } catch {
-    return false;
-  }
-}
 
 function resolveBaseURL() {
   const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");

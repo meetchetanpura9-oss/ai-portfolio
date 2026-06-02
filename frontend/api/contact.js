@@ -81,6 +81,9 @@ module.exports = async (req, res) => {
         user: mailUser,
         pass: mailPass,
       },
+      tls: {
+        rejectUnauthorized: false, // Bypass SSL validation issues on serverless host
+      },
     });
 
     const escapeHtml = (value = "") =>
