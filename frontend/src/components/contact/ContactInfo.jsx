@@ -4,7 +4,7 @@ import {
   HiOutlineLocationMarker,
   HiOutlineClock,
 } from "react-icons/hi";
-import { FaGithub, FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { CONTACT_LINKS } from "./constants";
 
 const item = {
@@ -33,12 +33,6 @@ const socialLinks = [
     icon: HiOutlineMail,
     label: "Email",
     text: CONTACT_LINKS.email,
-  },
-  {
-    href: CONTACT_LINKS.whatsapp,
-    icon: FaWhatsapp,
-    label: "WhatsApp",
-    text: "+91 99984 71715",
   },
   {
     href: CONTACT_LINKS.linkedin,
@@ -93,7 +87,7 @@ export default function ContactInfo() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        className="grid gap-3 sm:grid-cols-2"
+        className="grid gap-3 sm:grid-cols-3"
       >
         {socialLinks.map(({ href, icon: Icon, label, text }) => (
           <motion.a

@@ -159,7 +159,7 @@ module.exports = async (req, res) => {
             </p>
             
             <div style="margin-top:28px;border-top:1px solid #222;padding-top:16px;color:#888;font-size:13px;display:flex;align-items:center;">
-              <p style="margin:0;"><strong>Chetanpura Meet</strong><br>AI & Automation Engineer<br><a href="https://wa.me/919998471715" style="color:#22d3ee;text-decoration:none;">WhatsApp Chat</a></p>
+              <p style="margin:0;"><strong>Chetanpura Meet</strong><br>AI & Automation Engineer</p>
             </div>
           </div>
         </body>

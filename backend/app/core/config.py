@@ -52,9 +52,7 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_SMS_FROM: str = ""
-    TWILIO_WHATSAPP_FROM: str = "whatsapp:+14155238886"
     ADMIN_PHONE_SMS: str = ""
-    ADMIN_PHONE_WHATSAPP: str = ""
 
     # Optional: protect GET /contact and /contact/export (set a long random string)
     ADMIN_API_KEY: str = ""
@@ -92,10 +90,6 @@ class Settings(BaseSettings):
             and self.TWILIO_AUTH_TOKEN
             and self.ADMIN_PHONE_SMS
         )
-
-    @property
-    def twilio_whatsapp_enabled(self) -> bool:
-        return self.twilio_enabled and bool(self.ADMIN_PHONE_WHATSAPP)
 
 
 @lru_cache

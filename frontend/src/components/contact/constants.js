@@ -11,7 +11,6 @@ export const SERVICE_OPTIONS = [
 /** Public contact links — customize or use VITE_ env vars */
 export const CONTACT_LINKS = {
   email: import.meta.env.VITE_CONTACT_EMAIL || "meetchetanpura9@gmail.com",
-  whatsapp: import.meta.env.VITE_CONTACT_WHATSAPP || "https://wa.me/919998471715",
   linkedin:
     import.meta.env.VITE_CONTACT_LINKEDIN || "https://linkedin.com/in/chetanpurameet",
   github: import.meta.env.VITE_CONTACT_GITHUB || "https://github.com/meetchetanpura9-oss",

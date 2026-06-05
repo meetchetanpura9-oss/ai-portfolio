@@ -60,7 +60,6 @@ def _client_html_template(c: Contact, settings: Settings) -> str:
             <p style="margin:0;line-height:1.5;">
               <strong>Chetanpura Meet</strong><br>
               AI & Automation Engineer<br>
-              <a href="https://wa.me/919998471715" style="color:#38bdf8;text-decoration:none;">Chat on WhatsApp</a> | 
               <a href="https://github.com/meetchetanpura9-oss" style="color:#38bdf8;text-decoration:none;">GitHub</a>
             </p>
           </div>
