@@ -38,13 +38,13 @@ const socialLinks = [
     href: CONTACT_LINKS.linkedin,
     icon: FaLinkedin,
     label: "LinkedIn",
-    text: "@chetanpurameet",
+    text: "linkedin.com/in/chetanpurameet",
   },
   {
     href: CONTACT_LINKS.github,
     icon: FaGithub,
     label: "GitHub",
-    text: "@meetchetanpura9-oss",
+    text: "github.com/meetchetanpura9-oss",
   },
 ];
 
@@ -87,7 +87,7 @@ export default function ContactInfo() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        className="grid gap-3 sm:grid-cols-3"
+        className="space-y-3"
       >
         {socialLinks.map(({ href, icon: Icon, label, text }) => (
           <motion.a
@@ -95,10 +95,10 @@ export default function ContactInfo() {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.02, y: -1 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01, x: 2 }}
+            whileTap={{ scale: 0.99 }}
             aria-label={label}
-            className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-[box-shadow,border-color,color,background-color] duration-300 hover:border-violet-500/40 hover:bg-violet-500/5 hover:shadow-[0_0_32px_rgba(139,92,246,0.18)]"
+            className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-[box-shadow,border-color,background-color] duration-300 hover:border-violet-500/40 hover:bg-violet-500/5 hover:shadow-[0_0_32px_rgba(139,92,246,0.18)]"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-900/30 text-xl text-violet-300 transition-colors duration-300 group-hover:bg-violet-500/15 group-hover:text-violet-200">
@@ -106,11 +106,14 @@ export default function ContactInfo() {
               </span>
               <div>
                 <p className="text-sm font-semibold text-white">{label}</p>
-                <p className="mt-1 max-w-[12rem] text-xs leading-5 text-gray-400 break-words">
+                <p className="mt-0.5 text-xs text-gray-400 font-mono font-medium truncate max-w-[280px] xs:max-w-none">
                   {text}
                 </p>
               </div>
             </div>
+            <span className="text-[10px] font-mono font-bold text-gray-600 transition-transform group-hover:translate-x-1 group-hover:text-violet-400">
+              // VIEW
+            </span>
           </motion.a>
         ))}
       </motion.div>
