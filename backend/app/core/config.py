@@ -69,7 +69,9 @@ class Settings(BaseSettings):
             "http://localhost:5173",
             "http://localhost:3000",
             "http://127.0.0.1:5173",
-            "https://ai-portfolio-dusky-zeta.vercel.app"
+            "https://ai-portfolio-dusky-zeta.vercel.app",
+            "https://meetchetanpura.in",
+            "https://www.meetchetanpura.in"
         ]
         for f in fallbacks:
             if f not in origins:
