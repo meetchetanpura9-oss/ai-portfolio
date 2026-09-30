@@ -6,7 +6,7 @@ Never commit real secrets — use .env locally and platform secrets in productio
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # Admin & branding
     ADMIN_EMAIL: str = "admin@example.com"
+    ADMIN_PASSWORD: SecretStr | None = None
     ADMIN_NAME: str = "Portfolio Admin"
     SITE_NAME: str = "Chetanpura Meet — AI Portfolio"
 

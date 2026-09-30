@@ -20,7 +20,7 @@ from app.models.user_model import User  # noqa: F401
 from app.models.newsletter_model import NewsletterSubscriber  # noqa: F401
 from app.models.admin_log_model import AdminLog  # noqa: F401
 from app.models.analytics_model import Analytics  # noqa: F401
-from app.services.auth_service import hash_password
+from app.services.admin_bootstrap import create_admin_if_configured
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,8 +30,8 @@ settings = get_settings()
 try:
     Base.metadata.create_all(bind=engine)
     logging.info("Database tables verified/created successfully.")
-except Exception as e:
-    logging.error(f"Error during database table auto-creation: {e}")
+except Exception:
+    logging.error("Database table initialization failed.")
 
 # 2. Schema patches (ensure new columns exist in contacts table)
 try:
@@ -44,33 +44,16 @@ try:
         conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS inquiry_type VARCHAR(50)"))
         conn.commit()
         logging.info("Database migrations/patches applied successfully.")
-except Exception as e:
-    logging.error(f"Database schema patch warning: {e}")
+except Exception:
+    logging.error("Database schema patch failed.")
 
-# 3. Create default admin user on startup if missing
-db = SessionLocal()
-try:
-    admin_count = db.query(User).count()
-    if admin_count == 0:
-        import os
-        admin_email = settings.ADMIN_EMAIL if settings.ADMIN_EMAIL != "admin@example.com" else "meetchetanpura9@gmail.com"
-        admin_password = os.getenv("ADMIN_PASSWORD", "MeetAdmin2026!")
-        admin_user = User(
-            name=settings.ADMIN_NAME if settings.ADMIN_NAME != "Portfolio Admin" else "Meet Chetanpura",
-            email=admin_email.lower().strip(),
-            hashed_password=hash_password(admin_password),
-            role="admin"
-        )
-        db.add(admin_user)
-        db.commit()
-        logging.info(f"Auto-created default admin user: {admin_email} with password: {admin_password}")
-    else:
-        logging.info("Admin user check completed. User already exists.")
-except Exception as e:
-    db.rollback()
-    logging.error(f"Failed to auto-create default admin: {e}")
-finally:
-    db.close()
+# 3. Create the initial admin only when explicitly configured
+create_admin_if_configured(
+    SessionLocal,
+    email=settings.ADMIN_EMAIL,
+    name=settings.ADMIN_NAME,
+    password=settings.ADMIN_PASSWORD.get_secret_value() if settings.ADMIN_PASSWORD else None,
+)
 
 # 4. Instantiate FastAPI
 app = FastAPI(

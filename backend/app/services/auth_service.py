@@ -41,8 +41,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             plain_password.encode("utf-8"),
             hashed_password.encode("utf-8")
         )
-    except Exception as e:
-        logger.error(f"Password verification error: {e}")
+    except Exception:
+        logger.error("Password verification failed.")
         return False
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -62,8 +62,8 @@ def decode_access_token(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         return payload
-    except jwt.PyJWTError as e:
-        logger.debug(f"JWT Decode error: {e}")
+    except jwt.PyJWTError:
+        logger.debug("JWT decoding failed.")
         return None
 
 def get_current_user(
