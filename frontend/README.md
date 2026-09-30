@@ -1,16 +1,58 @@
-# React + Vite
+# Meet Chetanpura — Next.js 14+ AI Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, responsive, and performance-optimized single-scroll portfolio website built for **Meet Chetanpura** using **Next.js 14+ (App Router)** and **TypeScript**.
 
-Currently, two official plugins are available:
+## Tech Stack
+* **Framework**: Next.js 14+ (App Router), React, TypeScript
+* **Styling**: Tailwind CSS v4 with custom design-token config
+* **Animation**: Framer Motion, GSAP, Lenis Smooth Scroll
+* **Data Viz**: Recharts (Radar Chart overview)
+* **Icons**: Lucide React / React Icons
+* **Email System**: Nodemailer serverless Next.js API endpoint
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Key Advanced Upgrades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Lenis Smooth Scrolling**:
+   Integrates physics-based smooth scrolling with automatic speed controls and instant anchors. Honors accessibility settings by disabling smooth physics if `prefers-reduced-motion` is active.
 
-## Expanding the ESLint configuration
+2. **Orbiting Avatar Badges**:
+   The Hero avatar is surrounded by a circular orbit of key technology tags. The orbit rotates slowly in a linear path and pauses instantly when hovered. The badges are counter-rotated relative to the orbit path, ensuring text remains horizontally upright and legible.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. **Recharts Radar Chart**:
+   Visualizes core expertise categories (Machine Learning, Deep Learning, BI, etc.) in a premium responsive Radar Chart with a custom dark-glass themed container.
+
+4. **Animated Stats Counter**:
+   Stats (number of projects, certifications) animate by counting up from 0 to their target value when they scroll into view.
+
+5. **Typewriter Completion Fix**:
+   The typewriter hook resolves common render-reset loop bugs in React by buffering the words array in a React Ref, preventing infinite typing resets when layouts re-render.
+
+6. **Interactive Custom Cursor**:
+   Framer Motion spring physics drive a premium cursor dot and lagging trailing ring. The ring expands, glows, and snaps to position when hovering over interactive elements. Automatically disabled on touch screens and reduced-motion states.
+
+7. **API Route Migration**:
+   The contact form submits to a Next.js API Route (`/api/contact`). A failed request displays an error and keeps the entered values for retry.
+
+---
+
+## Local Setup
+
+### Installation
+From the `frontend` directory:
+```bash
+npm install
+```
+
+### Run Local Development Server
+```bash
+npm run dev
+```
+Open `http://localhost:3000` in your browser.
+
+### Production Build
+```bash
+npm run build
+```
+Generates an optimized production build in the `.next` folder, including server-side API routes.

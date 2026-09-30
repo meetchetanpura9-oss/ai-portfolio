@@ -6,13 +6,15 @@
 2. Import the project and set the root directory to `frontend/`.
 3. Set the following settings:
    - Build command: `npm run build`
-   - Output directory: `dist`
-   - Framework preset: `Vite`
+   - Framework preset: `Next.js`
+   - Output directory: use the Next.js default
 4. Add production environment variables in Vercel:
-   - `VITE_API_URL` = `https://<your-render-backend>.onrender.com`
+   - Required for the Next.js contact and newsletter routes: `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `ADMIN_EMAIL`.
+   - Optional: `SITE_NAME` and the `NEXT_PUBLIC_CONTACT_*` values listed in `frontend/.env.example`.
+   - Leave `NEXT_PUBLIC_API_URL` unset to use the same-origin Next.js `/api` routes.
 5. Deploy and verify the site loads.
 
-> The frontend uses `frontend/vercel.json` so Vercel knows how to build and route the app.
+> `frontend/vercel.json` selects the Next.js framework. The App Router handles page and API routes.
 
 ## Backend: Render
 
@@ -42,13 +44,13 @@
 
 ## Connecting the two services
 
-1. Set `VITE_API_URL` in Vercel to the Render backend URL.
-2. Ensure `ALLOWED_ORIGINS` in the backend includes your Vercel app URL.
-3. Deploy backend first, then frontend.
+1. Configure the frontend mail variables in Vercel for its same-origin contact and newsletter routes.
+2. If another frontend feature calls the Render backend directly, configure that feature's API URL and include the Vercel app URL in backend `ALLOWED_ORIGINS`.
+3. Deploy backend first if those features require it, then frontend.
 4. Visit the Vercel frontend and test the contact form and API-driven pages.
 
 ## Notes
 
-- Local dev already works using the existing Vite proxy in `frontend/vite.config.js`.
-- Production uses `frontend/src/lib/api.js` to read `VITE_API_URL`.
+- Local Next.js development uses `npm run dev` from `frontend/`.
+- `frontend/src/lib/api.ts` defaults to same-origin `/api` and can read `NEXT_PUBLIC_API_URL` when a separate API target is intentionally configured.
 - Do not commit real secrets; use Vercel and Render secret env vars instead.
