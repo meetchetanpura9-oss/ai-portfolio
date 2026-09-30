@@ -1,0 +1,107 @@
+import {
+  SiPython,
+  SiTensorflow,
+  SiPytorch,
+  SiPandas,
+  SiNumpy,
+  SiScikitlearn,
+  SiOpenai,
+  SiPostgresql,
+  SiGit,
+  SiFastapi,
+  SiDocker,
+  SiReact,
+  SiNextdotjs,
+  SiTypescript,
+  SiTailwindcss,
+  SiNodedotjs,
+} from "react-icons/si";
+import {
+  HiOutlineChip,
+  HiOutlineDatabase,
+  HiOutlineCode,
+  HiOutlineTerminal,
+  HiOutlineSparkles,
+  HiOutlineServer,
+} from "react-icons/hi";
+import { SkillCategory } from "../types";
+
+export const SKILL_CATEGORIES: SkillCategory[] = [
+  {
+    id: "ml",
+    label: "AI & Machine Learning",
+    tabIcon: HiOutlineChip,
+    orbitIcons: [SiPython, SiScikitlearn, SiPandas, SiNumpy, SiTensorflow, SiPytorch],
+    skills: [
+      { name: "Machine Learning (Supervised/Unsupervised)", tier: "Proficient", percentage: 94 },
+      { name: "Predictive Analytics & Forecasting", tier: "Proficient", percentage: 90 },
+      { name: "Scikit-learn, XGBoost, LightGBM", tier: "Proficient", percentage: 92 },
+      { name: "Deep Learning (PyTorch, TensorFlow)", tier: "Currently Learning", percentage: 88 },
+      { name: "Neural Network Architectures", tier: "Currently Learning", percentage: 86 },
+      { name: "Model Evaluation & SHAP Metrics", tier: "Working Knowledge", percentage: 84 },
+    ],
+  },
+  {
+    id: "genai",
+    label: "Generative AI & Agents",
+    tabIcon: HiOutlineSparkles,
+    orbitIcons: [SiOpenai, SiPython, SiFastapi, SiPytorch],
+    skills: [
+      { name: "RAG (Retrieval-Augmented Generation)", tier: "Working Knowledge", percentage: 90 },
+      { name: "LangChain & LangGraph Frameworks", tier: "Working Knowledge", percentage: 88 },
+      { name: "Vector Databases (FAISS / Embeddings)", tier: "Working Knowledge", percentage: 86 },
+      { name: "Prompt Engineering & Schema Parsing", tier: "Proficient", percentage: 92 },
+      { name: "Autonomous AI Agent Workflows", tier: "Working Knowledge", percentage: 85 },
+    ],
+  },
+  {
+    id: "backend",
+    label: "Backend & Systems",
+    tabIcon: HiOutlineServer,
+    orbitIcons: [SiFastapi, SiPython, SiPostgresql, SiNodedotjs, SiDocker],
+    skills: [
+      { name: "Python Development", tier: "Proficient", percentage: 95 },
+      { name: "FastAPI & RESTful APIs", tier: "Proficient", percentage: 92 },
+      { name: "PostgreSQL & Relational DBs", tier: "Proficient", percentage: 89 },
+      { name: "Async Processing & Pipeline Logic", tier: "Working Knowledge", percentage: 86 },
+      { name: "Node.js Fundamentals", tier: "Working Knowledge", percentage: 80 },
+    ],
+  },
+  {
+    id: "frontend",
+    label: "Frontend",
+    tabIcon: HiOutlineCode,
+    orbitIcons: [SiNextdotjs, SiReact, SiTypescript, SiTailwindcss],
+    skills: [
+      { name: "Next.js & React Frameworks", tier: "Working Knowledge", percentage: 88 },
+      { name: "TypeScript & JavaScript", tier: "Working Knowledge", percentage: 86 },
+      { name: "Tailwind CSS & Modern UI", tier: "Proficient", percentage: 92 },
+      { name: "Responsive & Accessible Design", tier: "Proficient", percentage: 90 },
+    ],
+  },
+  {
+    id: "data",
+    label: "Data & Analytics",
+    tabIcon: HiOutlineDatabase,
+    orbitIcons: [SiPandas, SiPostgresql, SiPython, SiNumpy],
+    skills: [
+      { name: "SQL & Relational Analytics", tier: "Proficient", percentage: 94 },
+      { name: "Power BI Executive Dashboards", tier: "Proficient", percentage: 92 },
+      { name: "Pandas & NumPy Data Wrangling", tier: "Proficient", percentage: 90 },
+      { name: "Business Intelligence & KPI Modeling", tier: "Proficient", percentage: 88 },
+      { name: "Excel Advanced Analytics", tier: "Proficient", percentage: 90 },
+    ],
+  },
+  {
+    id: "devops",
+    label: "DevOps & Tools",
+    tabIcon: HiOutlineTerminal,
+    orbitIcons: [SiGit, SiDocker, SiPython],
+    skills: [
+      { name: "Git & GitHub Version Control", tier: "Proficient", percentage: 92 },
+      { name: "Docker Containerization", tier: "Working Knowledge", percentage: 84 },
+      { name: "GitHub Actions CI/CD Basics", tier: "Working Knowledge", percentage: 80 },
+      { name: "Vercel & Cloud Deployment", tier: "Proficient", percentage: 88 },
+    ],
+  },
+];
