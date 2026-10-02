@@ -61,7 +61,7 @@ export default function RootLayout({
             __html: `
               try {
                 const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                if (savedTheme !== 'light') {
                   document.documentElement.classList.add('dark');
                   document.documentElement.style.colorScheme = 'dark';
                 } else {

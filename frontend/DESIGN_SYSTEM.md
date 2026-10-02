@@ -32,27 +32,29 @@ Borders, ambient backgrounds, cards, controls, and shadows also use tokens. The 
 
 ## Motion and depth
 
-- The hero's Canvas neural network is a conceptual **illustration**, not evidence of a delivered client architecture. It projects five layers in 3D, responds subtly to a fine pointer, and pauses outside the viewport. The caption says it is conceptual.
+- The homepage takes visual direction from an editorial portfolio reference: oversized type, a dark portrait opening, alternating project layouts, quiet metadata, and generous section transitions. Use Meet's own portrait, AI/ML diagrams, and portfolio copy; do not copy the reference site's claims, testimonials, or imagery.
+- The hero uses the repository's existing portrait. The Canvas neural network appears in the introduction as a conceptual **illustration**, not evidence of a delivered client architecture. It projects five layers in 3D, responds subtly to a fine pointer, and pauses outside the viewport. Its caption says it is conceptual.
 - The system-thinking section uses layered CSS cards to explain data, features, model, and feedback. It is a conceptual workflow, not a claim about the listed projects. Its text remains readable without hover or animation.
 - Pointer motion responds only to a mouse and stays subtle. The static view contains the same information. Do not require animation to understand a page or reach an action.
-- Entrance motion should last roughly 0.4–0.6 seconds. Avoid a timed intro gate, perpetual content movement, and scroll effects that interrupt reading.
+- Entrance motion should stay brief; the portrait headline uses a staggered 0.85-second reveal. Avoid a timed intro gate, perpetual content movement, and scroll effects that interrupt reading.
 - Respect `prefers-reduced-motion`: remove animation and pointer-driven rotation, keep content visible, and allow ordinary scrolling. Avoid large WebGL dependencies unless a measured benefit justifies them.
 
 ## Components and page order
 
-1. `Hero.tsx` and `NeuralNetworkScene.tsx`: name, practical positioning, two primary actions, recruiter/project-team paths, and a conceptual 3D neural network.
-2. `HorizontalWorkSection.tsx`: project records in review; no measured outcomes until proof and disclosure permission are available.
-3. `Services.tsx`: capability areas and examples, phrased as personal scope rather than a company promise.
-4. `MLPipeline.tsx`: conceptual data-to-decision sequence illustrated with depth.
-5. `ProcessSection.tsx`: working approach and checkpoints.
-6. `About.tsx`: short personal introduction; the `/about` route expands the approach.
-7. `ContactSection.tsx`: inquiry form and verified contact destinations.
+1. `Hero.tsx`: personal portrait, positioning, and two primary actions.
+2. `Manifesto.tsx` and `NeuralNetworkScene.tsx`: recruiter/project-team paths and a conceptual 3D neural network.
+3. `HorizontalWorkSection.tsx`: project records in review with abstract system diagrams; no measured outcomes until proof and disclosure permission are available.
+4. `Services.tsx`: capability areas and examples, phrased as personal scope rather than a company promise.
+5. `MLPipeline.tsx`: conceptual data-to-decision sequence illustrated with depth.
+6. `ProcessSection.tsx`: working approach and checkpoints.
+7. `About.tsx`: personal introduction; the `/about` route expands the approach.
+8. `ContactSection.tsx`: inquiry form and verified contact destinations.
 
 `/work` and `/work/[slug]` use the same tokens and clearly mark project details as pending verification. Detailed case-study fields remain in data for editorial review; the UI does not display them until approved. The old six-record dataset must not be merged with the four current records without resolving duplicates and provenance.
 
 ## Responsive and accessibility checks
 
-- At narrow widths, the hero becomes one column; path cards stack; the 3D illustration scales within the viewport; navigation becomes a menu that closes on Escape.
+- At narrow widths, the portrait fills the hero behind readable text; project layouts become one column; the 3D illustration scales within the viewport; navigation becomes a menu that closes on Escape.
 - Maintain logical heading order, a main landmark, skip link, useful link names, keyboard access, and visible focus. Decorative graphic nodes are hidden from assistive technology.
 - Check light and dark theme, 320px mobile through wide desktop, touch input, keyboard navigation, and reduced motion. Avoid hover-only information.
 

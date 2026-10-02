@@ -1,51 +1,44 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, BriefcaseBusiness, Code2 } from "lucide-react";
-import NeuralNetworkScene from "./NeuralNetworkScene";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import styles from "./EditorialHero.module.css";
 
 export default function Hero() {
-  const reduceMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion();
   const reveal = (delay: number) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 18 },
+    initial: reducedMotion ? false : { opacity: 0, y: 48 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0 : 0.55, delay: reduceMotion ? 0 : delay },
+    transition: { duration: reducedMotion ? 0 : .85, delay: reducedMotion ? 0 : delay, ease: [0.22, 1, 0.36, 1] as const },
   });
 
   return (
-    <section id="hero" aria-labelledby="hero-title" className="relative flex min-h-[min(55rem,100svh)] items-center overflow-hidden pb-14 pt-32 sm:pb-20">
-      <div className="shell relative z-10 grid items-center gap-12 lg:grid-cols-[1.1fr_.9fr] lg:gap-10">
-        <div>
-          <motion.p {...reveal(0)} className="type-label mb-7 flex items-center gap-3 text-[var(--color-muted)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--color-signal)]" aria-hidden="true" />
-            Meet Chetanpura / AI &amp; software engineering
-          </motion.p>
-          <motion.h1 {...reveal(0.08)} id="hero-title" className="type-display-lg max-w-[12ch]">
-            Building useful AI into <span className="text-[var(--color-signal)]">real software.</span>
-          </motion.h1>
-          <motion.p {...reveal(0.18)} className="type-body-lg mt-7 max-w-[37rem] text-[var(--color-muted)]">
-            I work across machine learning, automation, and product engineering. Explore my work and approach, or tell me about a problem you want to solve.
-          </motion.p>
-          <motion.div {...reveal(0.28)} className="mt-9 flex flex-wrap gap-3">
-            <a href="#work" className="btn-primary">View work <ArrowDownRight size={17} aria-hidden="true" /></a>
-            <a href="#contact" className="btn-secondary">Discuss a project <ArrowUpRight size={17} aria-hidden="true" /></a>
-          </motion.div>
-          <motion.div {...reveal(0.36)} className="mt-12 grid gap-3 border-t border-[var(--color-line)] pt-6 sm:grid-cols-2">
-            <a href="/about" className="audience-link">
-              <BriefcaseBusiness size={20} aria-hidden="true" />
-              <span><strong>For hiring teams</strong><small>Background, skills, and contribution</small></span>
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </a>
-            <a href="#services" className="audience-link">
-              <Code2 size={20} aria-hidden="true" />
-              <span><strong>For project teams</strong><small>Capabilities and working approach</small></span>
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </a>
+    <section id="hero" aria-labelledby="hero-title" className={styles.hero}>
+      <div className={styles.photo} aria-hidden="true">
+        <Image src="/hero-3.png.jpeg" alt="" fill priority sizes="(max-width: 700px) 100vw, 60vw" className={styles.portrait} />
+      </div>
+      <div className={styles.glow} aria-hidden="true" />
+      <div className={styles.content}>
+        <motion.div {...reveal(0)} className={styles.topline}>
+          <span>MEET CHETANPURA</span><span>AI / ML + SOFTWARE ENGINEERING</span>
+        </motion.div>
+        <div className={styles.center}>
+          <motion.p {...reveal(.1)} className={styles.intro}>Hello, I&apos;m Meet. I build useful intelligence into real software.</motion.p>
+          <h1 id="hero-title" className={styles.title}>
+            <motion.span {...reveal(.12)}>INTELLIGENT</motion.span>
+            <motion.span {...reveal(.24)} className={styles.indent}>SYSTEMS<span className={styles.period}>.</span></motion.span>
+            <motion.span {...reveal(.36)}>HUMAN IMPACT<span className={styles.period}>.</span></motion.span>
+          </h1>
+          <motion.div {...reveal(.48)} className={styles.actions}>
+            <Link href="#work">EXPLORE THE WORK <ArrowUpRight size={18} aria-hidden="true" /></Link>
+            <Link href="#contact">START A CONVERSATION <ArrowUpRight size={18} aria-hidden="true" /></Link>
           </motion.div>
         </div>
-        <motion.div {...reveal(0.15)} className="relative lg:translate-x-4">
-          <NeuralNetworkScene />
-          <p className="mx-auto mt-4 max-w-[35rem] text-center type-caption text-[var(--color-dim)]">Conceptual neural network / move your pointer to explore the depth</p>
+        <motion.div {...reveal(.58)} className={styles.bottomline}>
+          <span>PERSONAL PORTFOLIO / 2026</span>
+          <span>SCROLL TO EXPLORE <ArrowDownRight size={19} aria-hidden="true" /></span>
         </motion.div>
       </div>
     </section>

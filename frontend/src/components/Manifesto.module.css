@@ -1,0 +1,14 @@
+.section { padding: clamp(6rem, 12vw, 12rem) 0; overflow: hidden; background: #111410; color: #eee6d4; }
+.shell { display: grid; align-items: center; gap: 4rem; width: min(calc(100% - 3rem), 84rem); margin-inline: auto; }
+.eyebrow { font: 600 .72rem var(--font-code); letter-spacing: .13em; color: #a4c9b3; }
+.copy h2 { max-width: 15ch; margin: 1.6rem 0; font-size: clamp(3rem, 6.4vw, 6.8rem); font-weight: 550; line-height: 1.03; letter-spacing: -.07em; }
+.copy h2 em { font-weight: inherit; font-style: normal; color: #b5e5c7; }
+.copy p { max-width: 36rem; font-size: clamp(1.08rem, 1.5vw, 1.4rem); line-height: 1.55; color: #c8c5bb; }
+.paths { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-top: 3rem; }
+.paths a { display: flex; align-items: center; gap: .6rem; border-bottom: 1px solid #9dbdaa; padding: .7rem 0; font: 600 .7rem var(--font-code); letter-spacing: .07em; }
+.paths a:hover { color: #b5e5c7; }
+.visual { min-width: 0; }
+.visual :global(div[role="img"]) { width: min(100%, 34rem); }
+.visual p { margin: 1rem 0 0; text-align: center; color: #9fa99e; font: 500 .6rem var(--font-code); letter-spacing: .1em; }
+@media (min-width: 1024px) { .shell { grid-template-columns: 1.06fr .94fr; } }
+@media (max-width: 640px) { .shell { width: calc(100% - 2rem); gap: 3rem; } .copy h2 { font-size: clamp(3rem, 12vw, 4.8rem); } }

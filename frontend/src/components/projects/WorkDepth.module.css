@@ -1,4 +1,0 @@
-.card { perspective: 1100px; }
-.preview { transform: rotateY(-3deg) translateZ(8px); transform-origin: center; box-shadow: 14px 18px 28px rgba(3, 27, 23, .09); transition: transform .45s ease, box-shadow .45s ease; }
-@media (hover: hover) and (pointer: fine) { .card:hover .preview, .card:focus-within .preview { transform: rotateY(0) translateZ(22px); box-shadow: 18px 24px 40px rgba(3, 27, 23, .13); } }
-@media (prefers-reduced-motion: reduce) { .preview { transform: none; transition: none; } }

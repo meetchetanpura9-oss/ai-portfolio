@@ -1,0 +1,15 @@
+.section { background: #d3d4c6; color: #18211b; padding: clamp(6rem, 10vw, 10rem) 0; }
+.shell { width: min(calc(100% - 3rem), 84rem); margin: auto; }
+.grid { display: grid; align-items: center; gap: clamp(3rem, 8vw, 9rem); }
+.portrait { position: relative; aspect-ratio: .82; min-height: 26rem; overflow: hidden; border-radius: .3rem; background: #3c473b; }
+.portrait img { object-fit: cover; object-position: 50% 37%; filter: saturate(.55) contrast(.94); }
+.eyebrow, .stack > span { color: #386552; font: 600 .72rem var(--font-code); letter-spacing: .1em; }
+.copy h2 { margin: 1.5rem 0 2.5rem; font-size: clamp(3rem, 5.6vw, 6.5rem); line-height: .98; font-weight: 600; letter-spacing: -.075em; }
+.copy h2 em { font-style: normal; color: #426c52; }
+.copy p { max-width: 35rem; margin: 0 0 1.2rem; font-size: 1.08rem; line-height: 1.65; color: #37473b; }
+.link { display: inline-flex; align-items: center; gap: 1rem; margin-top: 2rem; border-bottom: 1px solid currentColor; padding: .7rem 0; font: 650 .74rem var(--font-code); letter-spacing: .06em; }
+.stack { display: grid; gap: 1.5rem; margin-top: 4rem; border-top: 1px solid rgba(18,33,26,.3); padding-top: 2rem; }
+.stack div { display: flex; flex-wrap: wrap; gap: .7rem; }
+.stack div span { border: 1px solid rgba(18,33,26,.28); border-radius: 999px; padding: .65rem 1rem; font: 500 .72rem var(--font-code); }
+@media (min-width: 850px) { .grid { grid-template-columns: .76fr 1.24fr; } .stack { grid-template-columns: 1fr 2fr; } }
+@media (max-width: 600px) { .shell { width: calc(100% - 2rem); } .portrait { min-height: 21rem; max-height: 34rem; } .copy h2 { font-size: clamp(2.6rem, 10vw, 4.5rem); } }
