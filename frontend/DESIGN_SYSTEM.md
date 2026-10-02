@@ -32,19 +32,21 @@ Borders, ambient backgrounds, cards, controls, and shadows also use tokens. The 
 
 ## Motion and depth
 
-- The hero's CSS 3D system object is an **illustration**, not evidence of a delivered client architecture. Its caption says so.
-- Pointer tilt responds only to a mouse and stays subtle. The static view contains the same information. Do not require animation to understand a page or reach an action.
+- The hero's Canvas neural network is a conceptual **illustration**, not evidence of a delivered client architecture. It projects five layers in 3D, responds subtly to a fine pointer, and pauses outside the viewport. The caption says it is conceptual.
+- The system-thinking section uses layered CSS cards to explain data, features, model, and feedback. It is a conceptual workflow, not a claim about the listed projects. Its text remains readable without hover or animation.
+- Pointer motion responds only to a mouse and stays subtle. The static view contains the same information. Do not require animation to understand a page or reach an action.
 - Entrance motion should last roughly 0.4–0.6 seconds. Avoid a timed intro gate, perpetual content movement, and scroll effects that interrupt reading.
 - Respect `prefers-reduced-motion`: remove animation and pointer-driven rotation, keep content visible, and allow ordinary scrolling. Avoid large WebGL dependencies unless a measured benefit justifies them.
 
 ## Components and page order
 
-1. `Hero.tsx`: name, practical positioning, two primary actions, and recruiter/project-team paths.
+1. `Hero.tsx` and `NeuralNetworkScene.tsx`: name, practical positioning, two primary actions, recruiter/project-team paths, and a conceptual 3D neural network.
 2. `HorizontalWorkSection.tsx`: project records in review; no measured outcomes until proof and disclosure permission are available.
 3. `Services.tsx`: capability areas and examples, phrased as personal scope rather than a company promise.
-4. `ProcessSection.tsx`: working approach and checkpoints.
-5. `About.tsx`: short personal introduction; the `/about` route expands the approach.
-6. `ContactSection.tsx`: inquiry form and verified contact destinations.
+4. `MLPipeline.tsx`: conceptual data-to-decision sequence illustrated with depth.
+5. `ProcessSection.tsx`: working approach and checkpoints.
+6. `About.tsx`: short personal introduction; the `/about` route expands the approach.
+7. `ContactSection.tsx`: inquiry form and verified contact destinations.
 
 `/work` and `/work/[slug]` use the same tokens and clearly mark project details as pending verification. Detailed case-study fields remain in data for editorial review; the UI does not display them until approved. The old six-record dataset must not be merged with the four current records without resolving duplicates and provenance.
 

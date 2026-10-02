@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, BriefcaseBusiness, Code2 } from "lucide-react";
-import NeuralCore from "./NeuralCore";
+import NeuralNetworkScene from "./NeuralNetworkScene";
 
 export default function Hero() {
   const reduceMotion = useReducedMotion();
@@ -44,8 +44,8 @@ export default function Hero() {
           </motion.div>
         </div>
         <motion.div {...reveal(0.15)} className="relative lg:translate-x-4">
-          <NeuralCore />
-          <p className="mx-auto mt-4 max-w-[35rem] text-center type-caption text-[var(--color-dim)]">Illustrative system visual / interaction follows your motion preference</p>
+          <NeuralNetworkScene />
+          <p className="mx-auto mt-4 max-w-[35rem] text-center type-caption text-[var(--color-dim)]">Conceptual neural network / move your pointer to explore the depth</p>
         </motion.div>
       </div>
     </section>

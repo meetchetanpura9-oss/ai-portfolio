@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import HorizontalWorkSection from "../components/projects/HorizontalWorkSection";
 import Services from "../components/Services";
+import MLPipeline from "../components/MLPipeline";
 import ProcessSection from "../components/ProcessSection";
 import About from "../components/About";
 import ContactSection from "../components/contact/ContactSection";
@@ -17,6 +18,7 @@ export default function Home() {
         <Hero />
         <HorizontalWorkSection />
         <Services />
+        <MLPipeline />
         <ProcessSection />
         <About />
         <ContactSection />

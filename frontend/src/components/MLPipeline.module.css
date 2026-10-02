@@ -1,0 +1,21 @@
+.heading { display: grid; gap: 2rem; align-items: end; margin-bottom: 3rem; }
+.scene { position: relative; padding: 2.5rem; overflow: hidden; border: 1px solid var(--color-line); border-radius: 2rem; background: radial-gradient(circle at 50% 55%, rgba(37, 165, 138, .09), transparent 50%), var(--color-panel); }
+.scene::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .3; background-image: linear-gradient(var(--color-line) 1px, transparent 1px), linear-gradient(90deg, var(--color-line) 1px, transparent 1px); background-size: 3rem 3rem; mask-image: linear-gradient(transparent, black 40%, transparent); }
+.track { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.65rem; perspective: 1200px; }
+.step { position: relative; min-width: 0; }
+.card { position: relative; display: flex; min-height: 21rem; flex-direction: column; padding: 1.5rem; overflow: hidden; border: 1px solid var(--color-line); border-radius: 1.35rem; background: var(--color-panel); box-shadow: 0 16px 35px rgba(2, 20, 18, .08); transform: rotateX(5deg) rotateY(-4deg); transform-style: preserve-3d; transition: transform .45s ease, box-shadow .45s ease, border-color .45s ease; }
+.card:hover { transform: translateY(-10px) rotateX(0deg) rotateY(0deg); border-color: var(--color-signal); box-shadow: 0 28px 45px rgba(2, 20, 18, .14); }
+.cardTop { display: flex; justify-content: space-between; align-items: center; color: var(--color-signal); font: 600 .68rem var(--font-code); letter-spacing: .12em; }
+.stack { position: relative; height: 6rem; margin: 1.4rem auto 1.25rem; width: 7rem; transform: rotateX(57deg) rotateZ(-35deg); transform-style: preserve-3d; }
+.stack span { position: absolute; inset: 0; border: 1px solid var(--color-signal); border-radius: .6rem; background: color-mix(in srgb, var(--color-signal) 12%, var(--color-panel)); box-shadow: 0 10px 22px rgba(4, 104, 84, .12); }
+.stack span:nth-child(1) { transform: translateZ(0); opacity: .55; }
+.stack span:nth-child(2) { transform: translateZ(22px); opacity: .75; }
+.stack span:nth-child(3) { transform: translateZ(44px); }
+.detail { margin-top: auto; margin-bottom: .4rem; color: var(--color-signal); font: 600 .62rem var(--font-code); letter-spacing: .12em; }
+.connector { position: absolute; top: 50%; right: -1.42rem; z-index: 2; transform: translateY(-50%); color: var(--color-signal); }
+.narrowArrow { display: none; }
+.footnote { margin-top: 1.2rem; color: var(--color-dim); font: 500 .7rem var(--font-code); }
+@media (min-width: 900px) { .heading { grid-template-columns: 1fr 25rem; } }
+@media (max-width: 1100px) { .scene { padding: 1.5rem; } .track { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; } .step:nth-child(2) .connector { right: auto; top: auto; bottom: -1.65rem; left: 50%; transform: translateX(-50%); } .step:nth-child(2) .wideArrow { display: none; } .step:nth-child(2) .narrowArrow { display: block; transform: rotate(45deg); } }
+@media (max-width: 600px) { .scene { padding: 1rem; border-radius: 1.4rem; } .track { grid-template-columns: 1fr; gap: 1.5rem; } .card { min-height: 16rem; } .stack { height: 3.5rem; margin: .8rem auto; } .connector, .step:nth-child(2) .connector { top: auto; right: auto; bottom: -1.5rem; left: 50%; transform: translateX(-50%); } .wideArrow, .step:nth-child(2) .wideArrow { display: none; } .narrowArrow, .step:nth-child(2) .narrowArrow { display: block; transform: rotate(45deg); } }
+@media (prefers-reduced-motion: reduce) { .card { transform: none; transition: none; } .card:hover { transform: none; } }

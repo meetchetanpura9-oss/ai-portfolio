@@ -1,0 +1,43 @@
+.stage {
+  position: relative;
+  width: min(42vw, 36rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(147, 231, 215, .22);
+  border-radius: 2rem;
+  background: radial-gradient(circle at 50% 42%, rgba(28, 111, 111, .38), transparent 48%), radial-gradient(circle at 76% 82%, rgba(31, 62, 118, .23), transparent 36%), #071014;
+  box-shadow: inset 0 0 70px rgba(25, 167, 138, .08), 0 32px 90px rgba(0, 24, 26, .22);
+}
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid rgba(185, 255, 237, .07);
+  border-radius: 1.25rem;
+  pointer-events: none;
+}
+.grid {
+  position: absolute;
+  inset: 0;
+  opacity: .38;
+  background-image: linear-gradient(rgba(119, 230, 212, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(119, 230, 212, .06) 1px, transparent 1px);
+  background-size: 2.7rem 2.7rem;
+  mask-image: radial-gradient(circle, #000 35%, transparent 78%);
+}
+.canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.corner, .note, .axis { position: absolute; z-index: 1; color: #a9c7c3; font: 600 .58rem/1.4 var(--font-code); letter-spacing: .12em; }
+.corner { top: 1.5rem; left: 1.5rem; display: flex; align-items: center; gap: .55rem; }
+.statusDot { width: .4rem; height: .4rem; border-radius: 50%; background: #a8ffe2; box-shadow: 0 0 12px #a8ffe2; }
+.axis { left: 1.5rem; right: 1.5rem; bottom: 3.5rem; display: flex; justify-content: space-between; gap: .3rem; color: #8eb1ad; font-size: .49rem; text-align: center; }
+.axis span { flex: 1; }
+.note { right: 1.5rem; bottom: 1.35rem; color: #91aead; }
+.note span { color: #b8ffe9; font-size: .9rem; }
+@media (max-width: 1023px) { .stage { width: min(85vw, 35rem); } }
+@media (max-width: 480px) {
+  .stage { width: min(calc(100vw - 2rem), 25rem); border-radius: 1.4rem; }
+  .corner { top: 1rem; left: 1rem; }
+  .axis { left: .75rem; right: .75rem; bottom: 2.8rem; font-size: .38rem; letter-spacing: .02em; }
+  .note { right: 1rem; bottom: .9rem; font-size: .48rem; }
+}
