@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import styles from "./NeuralCore.module.css";
 
 const nodes = [
@@ -9,6 +9,7 @@ const nodes = [
 ];
 
 export default function NeuralCore() {
+  const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
@@ -19,15 +20,16 @@ export default function NeuralCore() {
     <motion.div
       ref={ref}
       className={styles.stage}
-      style={{ rotateX, rotateY }}
+      style={reduceMotion ? undefined : { rotateX, rotateY }}
       onPointerMove={(event) => {
+        if (reduceMotion || event.pointerType !== "mouse") return;
         const box = ref.current?.getBoundingClientRect();
         if (!box) return;
         pointerX.set((event.clientX - box.left) / box.width - 0.5);
         pointerY.set((event.clientY - box.top) / box.height - 0.5);
       }}
       onPointerLeave={() => { pointerX.set(0); pointerY.set(0); }}
-      aria-label="Animated three-dimensional AI agent network"
+      aria-label="Illustrative AI system topology"
       role="img"
     >
       <div className={styles.scan} />

@@ -19,7 +19,7 @@ export const siteContent = {
   technologies: ["Python", "Java", "React", "Next.js", "FastAPI", "Docker", "PostgreSQL", "Azure", "LangChain", "Power BI"],
   about: {
     headline: "Engineering intelligence with a business point of view.",
-    summary: "I am Meet Chetanpura, an AI and automation engineer focused on building dependable systems at the intersection of models, software, and operations.",
+    summary: "I am Meet Chetanpura. I work at the intersection of machine learning, software, and the practical questions that make a system useful.",
     images: [
       { src: "/linkedin.webp", alt: "Meet Chetanpura professional portrait" },
       { src: "/hero-2.png.jpeg", alt: "Meet Chetanpura at university convocation" },

@@ -27,24 +27,24 @@ export const viewport = {
 
 export const metadata: Metadata = {
   title: "Meet Chetanpura — AI Systems Engineer",
-  description: "AI agents, machine-learning systems, and intelligent automation engineered for measurable business outcomes.",
+  description: "Meet Chetanpura's personal portfolio: machine learning, automation, software engineering, and project work.",
   keywords: ["AI Engineer", "ML Engineer", "Data Scientist", "Data Analyst", "BI Analyst", "Automation Engineering", "Python", "Power BI", "SQL"],
-  authors: [{ name: "Chetanpura Meet" }],
+  authors: [{ name: "Meet Chetanpura" }],
   openGraph: {
-    title: "Chetanpura Meet — AI Portfolio",
-    description: "AI & Automation systems delivering measurable business impact.",
-    url: "https://meetchetanpura.com",
-    siteName: "Chetanpura Meet — AI Portfolio",
+    title: "Meet Chetanpura — AI & Software Engineering",
+    description: "Project work and engineering approach across AI, automation, and software.",
+    url: "https://www.meetchetanpura.in/",
+    siteName: "Meet Chetanpura",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Chetanpura Meet — AI Portfolio",
-    description: "AI & Automation systems delivering measurable business impact.",
+    title: "Meet Chetanpura — AI & Software Engineering",
+    description: "Project work and engineering approach across AI, automation, and software.",
   },
   alternates: {
-    canonical: "https://meetchetanpura.com",
+    canonical: "https://www.meetchetanpura.in/",
   },
 };
 

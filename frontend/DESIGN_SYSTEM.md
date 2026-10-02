@@ -1,53 +1,59 @@
-# Portfolio design system (AI / Data Science)
+# Meet Chetanpura — personal portfolio design system
 
-## Recommended color palette
+This document describes the current personal site. `PORTFOLIO_STRATEGY.md` tracks the evidence and content decisions. MC Intelligence is a separate future company portfolio.
 
-| Role | Hex | Usage |
-|------|-----|--------|
-| **Void** | `#050508` | Deepest background |
-| **Surface** | `#0A0A0F` | Section backgrounds |
-| **Raised** | `#12121C` | Cards, nav |
-| **Violet** | `#8B5CF6` | Primary CTA, links, AI brand |
-| **Fuchsia** | `#D946EF` | Gradient mid-tone |
-| **Cyan** | `#22D3EE` | Data / tech accents |
-| **Rose** | `#F472B6` | Highlights, featured tags |
-| **Emerald** | `#34D399` | Success, availability |
-| **Text** | `#F4F4F5` / `#A1A1AA` | Primary / muted |
+## Intent and visitor paths
 
-### Gradient (headlines & buttons)
+- **Hiring team:** identify Meet, inspect work, understand contribution and background, then contact him. Resume download remains dependent on approval of the current PDF.
+- **Project team:** understand capabilities and approach, inspect relevant work, then describe a project through the contact section.
+- Keep Meet's name and personal voice prominent. Do not present unverified project records as client engagements, measured outcomes, or live demos.
 
-```
-135deg: #8B5CF6 → #D946EF → #22D3EE
-```
+## Foundations
 
-Avoid more than 3 accent colors per screen — keeps a luxury, Vercel/Apple feel.
+The implementation is in `src/styles/theme.css`, imported by `src/app/globals.css`. Use the variables below rather than hardcoded page colors. Tailwind utilities can compose layouts around these tokens.
 
-## Animation guidelines
+| Role | Light | Dark | Token |
+| --- | --- | --- | --- |
+| Canvas | `#f4f7f6` | `#050708` | `--color-void` |
+| Panel | `#ffffff` | `#0b0f11` | `--color-panel` |
+| Raised panel | `#edf2f0` | `#111719` | `--color-panel-raised` |
+| Text | `#101718` | `#f5f7f7` | `--color-ink` |
+| Secondary text | `#536166` | `#9aa4aa` | `--color-muted` |
+| Action | `#087d68` | `#8ef7dc` | `--color-signal` |
 
-| Effect | Where | Tool |
-|--------|--------|------|
-| Scroll fade-up | Section headers | Framer `whileInView` |
-| Stagger children | Grids, lists | `staggerChildren: 0.08` |
-| Orb float | Hero badges, skills | `y: [0,-10,0]` loop |
-| Shimmer CTA | Primary buttons | Moving gradient overlay |
-| Mouse glow | Global ambient | `MouseGlow.jsx` |
-| 3D tilt | Project/bento cards | `TiltCard.jsx` |
-| Typewriter | Hero role line | `useTypewriter` |
+Borders, ambient backgrounds, cards, controls, and shadows also use tokens. The accent signals actions and emphasis; avoid putting it on every surface. Check contrast in both themes whenever a new combination is introduced.
 
-Keep duration **0.4–0.6s**, easing `[0.22, 1, 0.36, 1]`.
+## Type and layout
 
-## 3D & glass
+- **Inter** for headlines, body, navigation, and buttons; **JetBrains Mono** for short labels and technical metadata. Both are loaded in `src/app/layout.tsx`.
+- Use `.type-display-lg`, `.type-h1` through `.type-h4`, `.type-body-lg` and `.type-body-md`, `.type-label`, and `.type-caption` from `theme.css`. Keep body copy in sentence case and constrain long lines.
+- `.shell` caps the content width at `84rem` with responsive side gutters. `.tech-section` provides section rhythm and a top divider. Use cards sparingly to group actual information, not to fill empty space.
+- Primary buttons use `.btn-primary`; secondary actions use `.btn-secondary`. All interactive controls need a visible focus state and descriptive text.
 
-- **Glass:** `bg-white/[0.04]` + `backdrop-blur-xl` + `border-white/10`
-- **Glow:** `shadow-[0_0_40px_rgba(139,92,246,0.35)]` on hover
-- **3D:** max tilt **6–8°** — subtle, not gimmicky
+## Motion and depth
 
-## Typography
+- The hero's CSS 3D system object is an **illustration**, not evidence of a delivered client architecture. Its caption says so.
+- Pointer tilt responds only to a mouse and stays subtle. The static view contains the same information. Do not require animation to understand a page or reach an action.
+- Entrance motion should last roughly 0.4–0.6 seconds. Avoid a timed intro gate, perpetual content movement, and scroll effects that interrupt reading.
+- Respect `prefers-reduced-motion`: remove animation and pointer-driven rotation, keep content visible, and allow ordinary scrolling. Avoid large WebGL dependencies unless a measured benefit justifies them.
 
-- **Headings:** Outfit — bold, tight tracking
-- **Labels / code:** JetBrains Mono — uppercase micro labels
+## Components and page order
 
-## Files
+1. `Hero.tsx`: name, practical positioning, two primary actions, and recruiter/project-team paths.
+2. `HorizontalWorkSection.tsx`: project records in review; no measured outcomes until proof and disclosure permission are available.
+3. `Services.tsx`: capability areas and examples, phrased as personal scope rather than a company promise.
+4. `ProcessSection.tsx`: working approach and checkpoints.
+5. `About.tsx`: short personal introduction; the `/about` route expands the approach.
+6. `ContactSection.tsx`: inquiry form and verified contact destinations.
 
-- Tokens: `src/styles/theme.css`
-- Effects: `src/components/effects/MouseGlow.jsx`, `TiltCard.jsx`
+`/work` and `/work/[slug]` use the same tokens and clearly mark project details as pending verification. Detailed case-study fields remain in data for editorial review; the UI does not display them until approved. The old six-record dataset must not be merged with the four current records without resolving duplicates and provenance.
+
+## Responsive and accessibility checks
+
+- At narrow widths, the hero becomes one column; path cards stack; the 3D illustration scales within the viewport; navigation becomes a menu that closes on Escape.
+- Maintain logical heading order, a main landmark, skip link, useful link names, keyboard access, and visible focus. Decorative graphic nodes are hidden from assistive technology.
+- Check light and dark theme, 320px mobile through wide desktop, touch input, keyboard navigation, and reduced motion. Avoid hover-only information.
+
+## Editorial release gate
+
+Before restoring project details, dates, education, badges, metrics, resume, demos, or client names, verify them against owner-approved artifacts. A repository file proves that copy exists; it is not proof of a real-world result. Keep missing destinations absent. Review legal text and live form delivery separately before deployment.
