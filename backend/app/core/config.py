@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Admin & branding
     ADMIN_EMAIL: str = "admin@example.com"
     ADMIN_NAME: str = "Portfolio Admin"
+    # Only used to create the very first admin account. No default: if unset,
+    # no admin is auto-created. Never log or return this value.
+    ADMIN_PASSWORD: str = ""
     SITE_NAME: str = "Chetanpura Meet — AI Portfolio"
 
     # SMTP (FastAPI-Mail)
@@ -53,6 +56,14 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_SMS_FROM: str = ""
     ADMIN_PHONE_SMS: str = ""
+
+    # WhatsApp alerts for new contact submissions — configure ONE provider.
+    # A) CallMeBot (free, personal): https://www.callmebot.com/blog/free-api-whatsapp-messages/
+    CALLMEBOT_PHONE: str = ""       # your WhatsApp number with country code, e.g. +919998471715
+    CALLMEBOT_APIKEY: str = ""
+    # B) Twilio WhatsApp (also needs TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN above)
+    TWILIO_WHATSAPP_FROM: str = ""  # e.g. whatsapp:+14155238886 (sandbox) or an approved sender
+    ADMIN_PHONE_WHATSAPP: str = ""  # e.g. whatsapp:+919998471715
 
     # Optional: protect GET /contact and /contact/export (set a long random string)
     ADMIN_API_KEY: str = ""
@@ -84,6 +95,19 @@ class Settings(BaseSettings):
     @property
     def mail_enabled(self) -> bool:
         return bool(self.MAIL_SERVER and self.MAIL_USERNAME and self.MAIL_PASSWORD)
+
+    @property
+    def callmebot_enabled(self) -> bool:
+        return bool(self.CALLMEBOT_PHONE and self.CALLMEBOT_APIKEY)
+
+    @property
+    def twilio_whatsapp_enabled(self) -> bool:
+        return bool(
+            self.TWILIO_ACCOUNT_SID
+            and self.TWILIO_AUTH_TOKEN
+            and self.TWILIO_WHATSAPP_FROM
+            and self.ADMIN_PHONE_WHATSAPP
+        )
 
     @property
     def twilio_enabled(self) -> bool:

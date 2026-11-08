@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 
 from app.core.config import get_settings
+from app.database.connection import normalize_database_url
 
 
 def ensure_database_exists() -> str:
@@ -14,7 +15,8 @@ def ensure_database_exists() -> str:
     Returns the full DATABASE_URL for the application database.
     """
     settings = get_settings()
-    url = make_url(settings.DATABASE_URL)
+    # Same postgres:// -> postgresql+psycopg:// handling as the app engine.
+    url = make_url(normalize_database_url(settings.DATABASE_URL))
     db_name = url.database
 
     if not db_name:

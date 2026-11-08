@@ -9,7 +9,31 @@ When a visitor submits the contact form:
 | **Excel CSV** | `backend/data/contact_submissions.csv` (automatic) |
 | **PostgreSQL** | Table `contacts` in `ai_portfolio` |
 | **Email** (optional) | meetchetanpura9@gmail.com — Gmail App Password in `.env` |
-| **SMS / WhatsApp** (optional) | Twilio — skip if not needed |
+| **WhatsApp** | Your WhatsApp — full inquiry details (CallMeBot free, or Twilio) |
+| **SMS** (optional) | Twilio — skip if not needed |
+
+---
+
+## 0. WhatsApp alert (recommended: CallMeBot — free)
+
+Every submission sends you a WhatsApp message with the name, email, phone, company,
+service (including custom services typed by the visitor) and the full message.
+
+1. Save the CallMeBot WhatsApp number shown on
+   https://www.callmebot.com/blog/free-api-whatsapp-messages/ in your phone contacts.
+2. From your WhatsApp, send it: `I allow callmebot to send me messages`
+3. You will receive an API key. Add to `backend/.env` (and to Render → Environment):
+
+```env
+CALLMEBOT_PHONE=+919998471715
+CALLMEBOT_APIKEY=1234567
+```
+
+4. Restart the API and submit the contact form to test.
+
+Prefer Twilio instead? Leave the CallMeBot keys empty and set `TWILIO_ACCOUNT_SID`,
+`TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` and `ADMIN_PHONE_WHATSAPP` (see section 2).
+If WhatsApp is not configured the form still works — the alert is simply skipped and logged.
 
 ---
 
@@ -47,7 +71,7 @@ SMS/WhatsApp do **not** work without a Twilio account (free trial available).
    - Use sandbox `from` number in `TWILIO_WHATSAPP_FROM`
 
 ```env
-TWILIO_ACCOUNT_SID=AC483ce6379deb55a06b023484825f5e51
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxx
 TWILIO_SMS_FROM=+1xxxxxxxxxx
 TWILIO_WHATSAPP_FROM=whatsapp:+14155238886

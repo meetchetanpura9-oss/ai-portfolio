@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import text
 
 from app.core.config import get_settings
@@ -13,7 +13,7 @@ from app.routes.auth_routes import router as auth_router
 from app.routes.newsletter_routes import router as newsletter_router
 from app.routes.analytics_routes import router as analytics_router
 
-from app.database.connection import Base, engine, SessionLocal
+from app.database.connection import Base, engine, SessionLocal, DATABASE_URL, check_database
 from app.models.contact_model import Contact  # noqa: F401
 from app.models.project_model import Project  # noqa: F401
 from app.models.user_model import User  # noqa: F401
@@ -26,51 +26,70 @@ logging.basicConfig(level=logging.INFO)
 
 settings = get_settings()
 
-# 1. Automatically create/verify database tables on application startup
-try:
-    Base.metadata.create_all(bind=engine)
-    logging.info("Database tables verified/created successfully.")
-except Exception as e:
-    logging.error(f"Error during database table auto-creation: {e}")
+DB_STATE = {"ready": False, "error": None}
 
-# 2. Schema patches (ensure new columns exist in contacts table)
-try:
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)"))
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Unknown'"))
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'new'"))
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_status VARCHAR(50) DEFAULT 'pending'"))
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_error TEXT"))
-        conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS inquiry_type VARCHAR(50)"))
-        conn.commit()
-        logging.info("Database migrations/patches applied successfully.")
-except Exception as e:
-    logging.error(f"Database schema patch warning: {e}")
 
-# 3. Create default admin user on startup if missing
-db = SessionLocal()
-try:
-    admin_count = db.query(User).count()
-    if admin_count == 0:
-        import os
-        admin_email = settings.ADMIN_EMAIL if settings.ADMIN_EMAIL != "admin@example.com" else "meetchetanpura9@gmail.com"
-        admin_password = os.getenv("ADMIN_PASSWORD", "MeetAdmin2026!")
-        admin_user = User(
-            name=settings.ADMIN_NAME if settings.ADMIN_NAME != "Portfolio Admin" else "Meet Chetanpura",
-            email=admin_email.lower().strip(),
-            hashed_password=hash_password(admin_password),
-            role="admin"
-        )
-        db.add(admin_user)
-        db.commit()
-        logging.info(f"Auto-created default admin user: {admin_email} with password: {admin_password}")
-    else:
-        logging.info("Admin user check completed. User already exists.")
-except Exception as e:
-    db.rollback()
-    logging.error(f"Failed to auto-create default admin: {e}")
-finally:
-    db.close()
+def init_database() -> bool:
+    """
+    Create tables, apply column patches and seed the admin user.
+    Safe to call repeatedly: it runs at startup and again from /health/db
+    until the database is reachable, so a database that comes back later
+    (or a newly set DATABASE_URL) starts working without code changes.
+    """
+    status_check = check_database()
+    if not status_check["ok"]:
+        # check_database() already logged the full reason; never log DATABASE_URL.
+        DB_STATE.update(ready=False, error=status_check["error"])
+        return False
+
+    try:
+        Base.metadata.create_all(bind=engine)
+        if not DATABASE_URL.startswith("sqlite"):
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)"))
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Unknown'"))
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'new'"))
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_status VARCHAR(50) DEFAULT 'pending'"))
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_error TEXT"))
+                conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS inquiry_type VARCHAR(50)"))
+                conn.commit()
+    except Exception as e:
+        DB_STATE.update(ready=False, error=f"Schema setup failed: {type(e).__name__}: {str(e)[:200]}")
+        logging.exception("Database schema setup failed")
+        return False
+
+    db = SessionLocal()
+    try:
+        # Only seeds when there are no users at all; existing accounts and
+        # passwords are never touched.
+        if db.query(User).count() == 0:
+            admin_password = settings.ADMIN_PASSWORD
+            if not admin_password:
+                logging.warning(
+                    "No users exist and ADMIN_PASSWORD is not set; skipping initial admin creation."
+                )
+            else:
+                admin_email = settings.ADMIN_EMAIL if settings.ADMIN_EMAIL != "admin@example.com" else "meetchetanpura9@gmail.com"
+                db.add(User(
+                    name=settings.ADMIN_NAME if settings.ADMIN_NAME != "Portfolio Admin" else "Meet Chetanpura",
+                    email=admin_email.lower().strip(),
+                    hashed_password=hash_password(admin_password),
+                    role="admin",
+                ))
+                db.commit()
+                logging.info("Initial admin account created.")
+    except Exception as e:
+        db.rollback()
+        logging.error("Failed to create initial admin account (%s)", type(e).__name__)
+    finally:
+        db.close()
+
+    DB_STATE.update(ready=True, error=None)
+    logging.info("Database ready.")
+    return True
+
+
+init_database()
 
 # 4. Instantiate FastAPI
 app = FastAPI(
@@ -104,7 +123,30 @@ app.include_router(analytics_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "database": "connected" if DB_STATE["ready"] else "disconnected"}
+
+
+@app.get("/health/db", summary="Database connection check")
+def health_db():
+    """
+    Runs SELECT 1 on the shared engine. 200 when connected, 503 otherwise.
+    If the database was down at startup and is reachable now, this also
+    finishes the deferred schema setup. Failure details go to the server log only.
+    """
+    connected = check_database()["ok"]
+    if connected and not DB_STATE["ready"]:
+        connected = init_database()
+    if not connected:
+        DB_STATE["ready"] = False
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "database": "disconnected",
+                "message": "Database temporarily unavailable",
+            },
+        )
+    return {"status": "ok", "database": "connected"}
 
 
 @app.get("/", response_class=HTMLResponse)
