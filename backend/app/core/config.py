@@ -31,7 +31,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
     # Admin & branding
-    ADMIN_EMAIL: str = "admin@example.com"
+    # Where new contact-form alerts are delivered.
+    ADMIN_EMAIL: str = "meetchetanpura9@gmail.com"
     ADMIN_NAME: str = "Portfolio Admin"
     # Only used to create the very first admin account. No default: if unset,
     # no admin is auto-created. Never log or return this value.
@@ -68,8 +69,17 @@ class Settings(BaseSettings):
     # Optional: protect GET /contact and /contact/export (set a long random string)
     ADMIN_API_KEY: str = ""
     
-    # Resend API Key for SaaS email notifications
+    # Resend (https://resend.com) — sends over HTTPS, so it works on hosts that block SMTP
+    # (Render's free plan does). Leave RESEND_FROM empty to use Resend's shared sender
+    # onboarding@resend.dev, which can only deliver to the email your Resend account was
+    # created with. After verifying your own domain in Resend, set e.g.
+    # RESEND_FROM=hello@meetchetanpura.in so auto-replies reach visitors too.
     RESEND_API_KEY: str = ""
+    RESEND_FROM: str = ""
+
+    @property
+    def resend_enabled(self) -> bool:
+        return self.RESEND_API_KEY.strip().startswith("re_")
 
     @property
     def cors_origins(self) -> List[str]:

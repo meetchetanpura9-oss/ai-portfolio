@@ -26,6 +26,9 @@ def _mail_config(settings: Settings):
         MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
         USE_CREDENTIALS=True,
         VALIDATE_CERTS=False,
+        # Fail fast: some hosts (e.g. Render's free plan) block outbound SMTP ports,
+        # and the default 60 s wait would just hang the background task.
+        TIMEOUT=20,
     )
 
 
@@ -91,29 +94,44 @@ def _client_auto_reply_html(contact: Contact, settings: Settings) -> str:
     """
 
 
-async def send_contact_emails(contact: Contact, settings: Settings) -> None:
+async def _smtp_send(settings: Settings, subject: str, to: str, body: str, reply_to: str | None = None) -> None:
+    """Send one HTML email over SMTP. Raises if SMTP is not configured or sending fails."""
     if not settings.mail_enabled:
-        logger.warning("SMTP not configured - skipping email notifications")
-        return
+        raise RuntimeError("SMTP is not configured (MAIL_SERVER / MAIL_USERNAME / MAIL_PASSWORD)")
 
     from fastapi_mail import FastMail, MessageSchema, MessageType
 
-    fm = FastMail(_mail_config(settings))
-
-    admin_message = MessageSchema(
-        subject=f"New Contact Us form message from {contact.full_name}",
-        recipients=[settings.ADMIN_EMAIL],
-        body=_admin_html(contact, settings),
+    message = MessageSchema(
+        subject=subject,
+        recipients=[to],
+        body=body,
         subtype=MessageType.html,
+        reply_to=[reply_to] if reply_to else [],
+    )
+    await FastMail(_mail_config(settings)).send_message(message)
+
+
+async def send_admin_alert_smtp(contact: Contact, settings: Settings) -> None:
+    await _smtp_send(
+        settings,
+        f"New Contact Us form message from {contact.full_name}",
+        settings.ADMIN_EMAIL,
+        _admin_html(contact, settings),
+        reply_to=contact.email,
     )
 
-    client_message = MessageSchema(
-        subject="Thank you for filling out the form",
-        recipients=[contact.email],
-        body=_client_auto_reply_html(contact, settings),
-        subtype=MessageType.html,
+
+async def send_client_reply_smtp(contact: Contact, settings: Settings) -> None:
+    await _smtp_send(
+        settings,
+        "Thank you for filling out the form",
+        contact.email,
+        _client_auto_reply_html(contact, settings),
     )
 
-    await fm.send_message(admin_message)
-    await fm.send_message(client_message)
+
+async def send_contact_emails(contact: Contact, settings: Settings) -> None:
+    """Admin alert + client auto-reply over SMTP. Raises on failure (never fakes success)."""
+    await send_admin_alert_smtp(contact, settings)
+    await send_client_reply_smtp(contact, settings)
     logger.info("Contact emails sent for submission id=%s", contact.id)

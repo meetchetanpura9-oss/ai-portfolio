@@ -12,6 +12,7 @@ from app.routes.playground_routes import router as playground_router
 from app.routes.auth_routes import router as auth_router
 from app.routes.newsletter_routes import router as newsletter_router
 from app.routes.analytics_routes import router as analytics_router
+from app.routes.notification_routes import router as notification_router
 
 from app.database.connection import Base, engine, SessionLocal, DATABASE_URL, check_database
 from app.models.contact_model import Contact  # noqa: F401
@@ -120,6 +121,7 @@ app.include_router(playground_router)
 app.include_router(auth_router)
 app.include_router(newsletter_router)
 app.include_router(analytics_router)
+app.include_router(notification_router)
 
 @app.get("/health")
 def health():

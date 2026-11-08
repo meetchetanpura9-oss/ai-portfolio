@@ -1,5 +1,35 @@
 # Contact notifications setup
 
+## ⚠️ On Render's free plan, use Resend (Gmail SMTP cannot work there)
+
+Render's free web services block outbound SMTP (ports 25 / 465 / 587), so the Gmail
+setup in section 1 only works locally. In production, email goes out through
+**Resend's HTTPS API**:
+
+1. Sign up at https://resend.com **using `meetchetanpura9@gmail.com`** — without a verified
+   domain, Resend only delivers to the address the account was created with.
+2. Resend → **API Keys** → *Create API key* (permission: *Sending access*). It starts with `re_`.
+3. Render → `ai-portfolio-backend` → **Environment** → add / check:
+
+   | Key | Value |
+   |-----|-------|
+   | `RESEND_API_KEY` | the `re_…` key |
+   | `ADMIN_EMAIL` | `meetchetanpura9@gmail.com` |
+
+   Leave `RESEND_FROM` unset for now. Save — Render redeploys automatically.
+4. Log in at `/login`, then call **POST `/admin/notifications/test`** (or open
+   `/docs` → *Notifications*) to send yourself a test alert. **GET
+   `/admin/notifications/status`** shows what is configured (never shows keys).
+5. Check Gmail (and the Spam folder the first time — mark it *Not spam*).
+
+Each submission's delivery result is shown in the admin dashboard (`notification_status`
+/ `notification_error`), including the provider's exact error if something fails.
+
+**Visitor auto-replies** need a verified domain: Resend → *Domains* → add
+`meetchetanpura.in`, add the DNS records Resend shows (they live on a `send.` subdomain
+and do not touch the website's records), then set `RESEND_FROM=hello@meetchetanpura.in`
+on Render. Until then the owner alert is still delivered; only the auto-reply is skipped.
+
 > **Recommended:** Use **Excel CSV** + PostgreSQL — see `DATA_EXPORT.md` (no Twilio required).
 
 When a visitor submits the contact form:
