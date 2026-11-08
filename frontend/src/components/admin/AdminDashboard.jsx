@@ -353,6 +353,35 @@ export default function AdminDashboard() {
     }
   };
 
+  const [sendingTest, setSendingTest] = useState(false);
+
+  /** Send a sample contact alert to ADMIN_EMAIL to confirm email notifications work. */
+  const handleTestEmail = async () => {
+    const token = localStorage.getItem("adminToken");
+    setSendingTest(true);
+    toast("Sending test email…", "info");
+    try {
+      const { data } = await api.post("/admin/notifications/test", null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.sent) {
+        toast(`Test email sent to ${data.to} (${data.detail}). Check your inbox and Spam folder.`, "success", 8000);
+      } else {
+        // Stays on screen until dismissed so the provider's exact error can be read.
+        toast(`Test email failed: ${data.detail}`, "error", 0);
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        toast("Session expired. Please log in again.", "error");
+        handleLogout();
+      } else {
+        toast(`Test email request failed: ${err.response?.data?.detail || err.message}`, "error", 0);
+      }
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   const getInquiryBadgeStyle = (type) => {
     switch (type) {
       case "spam":
@@ -491,7 +520,16 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleTestEmail}
+              disabled={sendingTest}
+              title="Send a sample contact alert to your admin email"
+              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300 transition-colors hover:border-emerald-500/35 hover:text-white disabled:cursor-wait disabled:opacity-50"
+            >
+              <HiOutlineMail />
+              {sendingTest ? "Sending…" : "Send test email"}
+            </button>
             <button
               onClick={() => handleExport("csv")}
               className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300 transition-colors hover:border-violet-500/35 hover:text-white"
