@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { HiPaperAirplane } from "react-icons/hi";
-import { submitContact } from "../../lib/api";
+import { Send } from "lucide-react";
+import { apiErrorMessage, submitContact } from "../../lib/api";
 import { useToast } from "../../hooks/useToast";
-import { INITIAL_FORM, SERVICE_OPTIONS } from "./constants";
+import { CUSTOM_SERVICE, INITIAL_FORM, SERVICE_OPTIONS } from "./constants";
 import { FloatingInput, FloatingSelect, FloatingTextarea } from "./FloatingField";
 import SuccessState from "./SuccessState";
 
@@ -22,6 +22,8 @@ function validate(form) {
   }
   if (!form.service) {
     errors.service = "Please select a service";
+  } else if (form.service === CUSTOM_SERVICE && form.custom_service.trim().length < 2) {
+    errors.custom_service = "Tell me which service you need";
   }
   if (!form.message.trim() || form.message.trim().length < 10) {
     errors.message = "Message must be at least 10 characters";
@@ -58,7 +60,7 @@ export default function ContactForm() {
         email: form.email.trim(),
         phone: form.phone.trim(),
         company: form.company.trim() || null,
-        service: form.service,
+        service: form.service === CUSTOM_SERVICE ? form.custom_service.trim() : form.service,
         message: form.message.trim(),
         website: form.website,
       };
@@ -68,31 +70,7 @@ export default function ContactForm() {
       toast("Your message was sent successfully!", "success");
     } catch (err) {
       console.error("Contact submission failed", err);
-      const detail = err.response?.data?.detail;
-      let message = "Something went wrong. Please try again.";
-
-      if (err.response) {
-        if (typeof detail === "string") message = detail;
-        else if (Array.isArray(detail)) {
-          message = detail.map((d) => d.msg || d.message).join(", ");
-        } else if (detail?.message) message = detail.message;
-        else if (err.response.statusText) {
-          message = `${err.response.status} ${err.response.statusText}`;
-        }
-      } else if (err.message) {
-        if (window.location.hostname !== "localhost") {
-          message =
-            "Contact backend is not configured for this site. " +
-            "Please set VITE_API_URL to your API URL or deploy the backend on the same origin.";
-        } else {
-          message = `Network error: ${err.message}`;
-        }
-      }
-
-      if (err.response?.status === 429) {
-        message = "Too many requests. Please wait a minute and try again.";
-      }
-      toast(message, "error");
+      toast(apiErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -129,7 +107,7 @@ export default function ContactForm() {
         aria-hidden
       />
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <FloatingInput
           id="full_name"
           label="Full Name"
@@ -151,7 +129,7 @@ export default function ContactForm() {
         />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <FloatingInput
           id="phone"
           label="Phone Number"
@@ -182,6 +160,21 @@ export default function ContactForm() {
         options={SERVICE_OPTIONS}
       />
 
+      {form.service === CUSTOM_SERVICE && (
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
+          <FloatingInput
+            id="custom_service"
+            label="Your service (e.g. Chatbot for my clinic)"
+            value={form.custom_service}
+            onChange={set("custom_service")}
+            error={errors.custom_service}
+            required
+            maxLength={120}
+            autoFocus
+          />
+        </motion.div>
+      )}
+
       <FloatingTextarea
         id="message"
         label="Message"
@@ -192,34 +185,23 @@ export default function ContactForm() {
         rows={5}
       />
 
-      <motion.button
+      <button
         type="submit"
         disabled={loading}
-        whileHover={loading ? {} : { scale: 1.02, y: -2 }}
-        whileTap={loading ? {} : { scale: 0.98 }}
-        className="relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-4 text-sm font-semibold text-white shadow-[0_0_40px_rgba(139,92,246,0.35)] transition-opacity disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
+        className="btn btn-primary w-full !py-3.5 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {!loading && (
-          <motion.span
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-          />
+        {loading ? (
+          <>
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden />
+            Sending…
+          </>
+        ) : (
+          <>
+            Send Message
+            <Send size={17} aria-hidden />
+          </>
         )}
-        <span className="relative flex items-center gap-2">
-          {loading ? (
-            <>
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              Sending…
-            </>
-          ) : (
-            <>
-              Send Message
-              <HiPaperAirplane className="text-lg" />
-            </>
-          )}
-        </span>
-      </motion.button>
+      </button>
     </motion.form>
   );
 }

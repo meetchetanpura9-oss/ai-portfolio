@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HiOutlineMail, HiOutlineCheckCircle } from "react-icons/hi";
-import { api } from "../lib/api";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2, Mail } from "lucide-react";
+import { apiErrorMessage, postWithRetry } from "../lib/api";
 import { useToast } from "../hooks/useToast";
 
 export default function Newsletter() {
@@ -18,12 +18,9 @@ export default function Newsletter() {
       toast("Please enter your email address.", "error");
       return;
     }
-
     setLoading(true);
     try {
-      const response = await api.post("/newsletter/subscribe", {
-        email: cleanEmail,
-      });
+      const response = await postWithRetry("/newsletter/subscribe", { email: cleanEmail });
       const msg = response.data.message || "Thank you for subscribing!";
       setMessage(msg);
       setSuccess(true);
@@ -31,88 +28,51 @@ export default function Newsletter() {
       setEmail("");
     } catch (err) {
       console.error("Newsletter subscription failed", err);
-      const detail = err.response?.data?.detail || "Subscription failed. Please check your email.";
-      toast(detail, "error");
+      toast(apiErrorMessage(err, "Subscription failed. Please check your email."), "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-[0_8px_48px_rgba(0,0,0,0.35)]">
+    <div className="card w-full max-w-md p-5 sm:p-6">
       <AnimatePresence mode="wait">
         {!success ? (
-          <motion.div
-            key="input-form"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
+          <motion.div key="form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400">
-                <HiOutlineMail className="text-xl" />
-              </div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
+                <Mail size={18} aria-hidden />
+              </span>
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-white font-display uppercase">
-                  Subscribe to Newsletter
-                </h3>
-                <p className="text-xs text-gray-500">
-                  Stay updated on my latest AI research and project drops.
-                </p>
+                <h3 className="text-sm font-semibold text-ink">Newsletter</h3>
+                <p className="text-xs text-muted">Occasional updates on new AI projects and experiments.</p>
               </div>
             </div>
-
             <form onSubmit={handleSubmit} className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-4 pr-4 text-xs text-white outline-none focus:border-violet-500/50 transition-all"
-                />
-              </div>
-
-              <motion.button
-                type="submit"
-                disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-xs font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  "Subscribe"
-                )}
-              </motion.button>
+              <label htmlFor="newsletter-email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="newsletter-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                className="min-w-0 flex-1 rounded-xl border border-line bg-bg px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-subtle focus:border-brand-blue"
+              />
+              <button type="submit" disabled={loading} className="btn btn-primary !px-4 !py-2.5 text-sm disabled:opacity-70">
+                {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-label="Subscribing" /> : "Subscribe"}
+              </button>
             </form>
           </motion.div>
         ) : (
-          <motion.div
-            key="success-form"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center text-center space-y-3 py-2"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
-              <HiOutlineCheckCircle className="text-2xl" />
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white">Subscribed!</h4>
-              <p className="text-xs text-gray-400 mt-1 max-w-[280px]">
-                {message}
-              </p>
-            </div>
-            <button
-              onClick={() => setSuccess(false)}
-              className="text-[10px] text-gray-500 hover:text-gray-300 underline mt-1"
-            >
+          <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2 py-2 text-center" role="status">
+            <CheckCircle2 size={28} className="text-brand-emerald" aria-hidden />
+            <h4 className="text-sm font-semibold text-ink">Subscribed!</h4>
+            <p className="max-w-[280px] text-xs text-muted">{message}</p>
+            <button type="button" onClick={() => setSuccess(false)} className="mt-1 text-xs text-subtle underline hover:text-ink">
               Subscribe another email
             </button>
           </motion.div>

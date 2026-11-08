@@ -1,238 +1,178 @@
-import { motion } from "framer-motion";
-import {
-  HiOutlineChip,
-  HiOutlineDatabase,
-  HiOutlineLightningBolt,
-  HiOutlineChartBar,
-  HiOutlineCode,
-  HiOutlineGlobeAlt,
-} from "react-icons/hi";
-import { SiTensorflow, SiPytorch, SiPython, SiOpenai } from "react-icons/si";
-import BentoCard from "./BentoCard";
-import EducationTimeline from "./EducationTimeline";
-import Revealer from "./motion/Revealer";
+import { ArrowRight, Bot, Server, LineChart, MapPin, Mail } from "lucide-react";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { PROFILE } from "../data/profile";
+import { PROJECTS } from "../data/projects";
+import { CERTIFICATIONS } from "../data/certifications";
+import Reveal from "./ui/Reveal";
+import { RiseWords, ScrollLitText } from "./ui/TextEffects";
+import { useScrollTo } from "../hooks/useSmoothScroll";
 
-const FOCUS_AREAS = [
-  { label: "AI & Machine Learning", icon: HiOutlineChip, color: "text-violet-400" },
-  { label: "Automation Engineering", icon: HiOutlineLightningBolt, color: "text-fuchsia-400" },
-  { label: "Data & Analytics", icon: HiOutlineDatabase, color: "text-cyan-400" },
-  { label: "Business Intelligence", icon: HiOutlineChartBar, color: "text-emerald-400" },
+/*
+ * About — "story → strengths".
+ * Three blocks only: short story, profile card, what I bring.
+ * Focus areas and process already live in Skills / Agentic AI, so they are not repeated here.
+ */
+
+const STATS = [
+  { value: `${PROJECTS.length}+`, label: "Projects" },
+  { value: String(CERTIFICATIONS.length), label: "Certifications" },
 ];
 
-const STACK = [
-  { name: "Python", icon: SiPython },
-  { name: "TensorFlow", icon: SiTensorflow },
-  { name: "PyTorch", icon: SiPytorch },
-  { name: "AI Automation", icon: SiOpenai },
-];
-
-const headerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+const STRENGTHS = [
+  {
+    icon: Bot,
+    title: "Agentic & LLM apps",
+    text: "Agents and chatbots on Gemini, Groq and Azure AI Foundry that reason, call tools and act on their own.",
+    tone: "var(--brand-violet)",
   },
-};
+  {
+    icon: Server,
+    title: "Backend engineering",
+    text: "REST APIs with Flask and FastAPI, SQL databases, authentication and clean MVC structure.",
+    tone: "var(--brand-blue)",
+  },
+  {
+    icon: LineChart,
+    title: "Data & analytics",
+    text: "Pandas, Scikit-learn, Excel and Power BI to turn raw data into clear decisions.",
+    tone: "var(--brand-emerald)",
+  },
+];
+
+function ProfileCard() {
+  const scrollTo = useScrollTo();
+  return (
+    <div className="card mx-auto flex h-full w-full max-w-sm flex-col overflow-hidden lg:max-w-none">
+      {/* portrait frame */}
+      <div className="p-3 pb-0">
+        <div className="relative rounded-[1.25rem] bg-gradient-to-br from-[#2563eb] via-[#06b6d4] to-[#7c3aed] p-[2px] shadow-[0_20px_45px_-20px_rgb(37_99_235/0.55)]">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[calc(1.25rem-2px)] bg-surface-2">
+            <picture>
+              <source srcSet="/portrait.webp" type="image/webp" />
+              <img
+                src="/portrait.jpg"
+                alt={`Portrait of ${PROFILE.name}`}
+                width="640"
+                height="800"
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover object-[50%_20%] transition-transform duration-700 ease-out hover:scale-[1.03]"
+              />
+            </picture>
+            {/* bottom fade + caption */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/75 via-black/30 to-transparent" aria-hidden />
+            <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+              <p className="font-display text-xl font-semibold leading-tight">{PROFILE.name}</p>
+              <p className="mt-0.5 text-sm text-white/80">{PROFILE.role}</p>
+            </div>
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[0.7rem] font-medium text-white backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              Available
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <p className="inline-flex items-center gap-1.5 font-mono text-xs text-subtle">
+          <MapPin size={12} aria-hidden /> {PROFILE.location} · {PROFILE.timezone}
+        </p>
+
+        <dl className="mt-4 grid grid-cols-2 divide-x divide-line rounded-xl border border-line bg-bg">
+          {STATS.map(({ value, label }) => (
+            <div key={label} className="flex flex-col-reverse px-2 py-3 text-center">
+              <dt className="mt-0.5 text-[0.7rem] text-subtle">{label}</dt>
+              <dd className="font-display text-xl font-semibold text-ink">{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-auto flex items-center gap-2 pt-5">
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollTo("#contact", { offset: -72 });
+            }}
+            className="btn btn-primary flex-1 !py-2.5 text-sm"
+          >
+            Let&apos;s talk <ArrowRight size={16} aria-hidden />
+          </a>
+          <a href={PROFILE.github} target="_blank" rel="noopener noreferrer" className="icon-btn !h-11 !w-11" aria-label="GitHub profile">
+            <FaGithub aria-hidden />
+          </a>
+          <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" className="icon-btn !h-11 !w-11" aria-label="LinkedIn profile">
+            <FaLinkedin aria-hidden />
+          </a>
+          <a href={`mailto:${PROFILE.email}`} className="icon-btn !h-11 !w-11" aria-label={`Email ${PROFILE.email}`}>
+            <Mail size={17} aria-hidden />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function About() {
   return (
-    <Revealer id="about" className="relative overflow-hidden border-t border-white/5 bg-surface py-20 sm:py-28">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute left-1/2 top-0 h-[400px] w-[min(800px,100%)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.12),transparent_70%)]" />
-        <div className="absolute bottom-0 right-0 h-[300px] w-[300px] rounded-full bg-cyan-600/10 blur-[100px]" />
-      </div>
+    <section id="about" aria-labelledby="about-title" className="section">
+      <div className="container-x">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12">
+          {/* story + strengths */}
+          <div className="flex flex-col">
+            <Reveal>
+              <p className="eyebrow">
+                <span className="text-subtle">(01)</span> about
+              </p>
+            </Reveal>
+            <h2 id="about-title" className="mt-3 max-w-2xl text-3xl font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-4xl lg:text-[2.6rem]">
+              <RiseWords text="I turn ideas into" />{" "}
+              <RiseWords text="working AI products." delay={0.12} className="serif-accent text-[1.12em]" />
+            </h2>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
-        <motion.header
-          variants={headerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-10%" }}
-          className="mb-10 max-w-2xl sm:mb-14"
-        >
-          <motion.p
-            variants={fadeUp}
-            className="font-mono text-xs uppercase tracking-[0.2em] text-violet-400 sm:text-sm"
-          >
-            About Me
-          </motion.p>
-          <motion.h2
-            variants={fadeUp}
-            className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl font-display"
-          >
-            AI & Automation Engineer focused on
-            <span className="ml-2 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
-              business impact
-            </span>
-          </motion.h2>
-          <motion.p variants={fadeUp} className="mt-4 text-base text-gray-400 sm:text-lg">
-            I am a passionate AI & Automation Engineer with a strong foundation in
-            Python, Machine Learning, Deep Learning, SQL, Power BI, and Business
-            Intelligence. I focus on building scalable AI systems, automation
-            workflows, and intelligent dashboards that help businesses increase
-            efficiency and make smarter decisions.
-          </motion.p>
-        </motion.header>
+            <div className="mt-6 max-w-2xl space-y-4 text-base leading-relaxed text-ink sm:text-[1.05rem]">
+              <ScrollLitText>
+                I&apos;m <span className="font-semibold">Meet</span>, an MCA student at Parul University and a Python developer who
+                builds AI-powered software end to end: the model, the backend around it and the interface people actually use.
+              </ScrollLitText>
+              <ScrollLitText>
+                I started with Flask backends and data analysis. Today I build LLM agents and automation, such as a
+                lead-intelligence engine that crawls the web, scores leads with LLMs and runs outreach on its own.
+              </ScrollLitText>
+              <ScrollLitText className="font-medium">
+                I care about software that is useful, measurable and reliable, not just impressive in a demo.
+              </ScrollLitText>
+            </div>
 
-        <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {/* Main bio — large bento cell */}
-          <BentoCard
-            className="md:col-span-2 lg:row-span-2"
-            delay={0}
-            glow="violet"
-          >
-            <div className="flex h-full flex-col justify-between gap-6">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-600/10 px-3 py-1 text-xs font-medium text-violet-200">
-                  <HiOutlineCode className="text-sm" />
-                  Practical AI systems
-                </span>
-                <h3 className="mt-4 text-xl font-bold sm:text-2xl">Production-ready AI engineering</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-400 sm:text-base">
-                  With experience in data analytics, model development, and automation
-                  architecture, I bridge the gap between technology and business impact.
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-gray-500 sm:text-base">
-                  My goal is to create AI-powered solutions that are practical, measurable,
-                  and production-ready.
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-gray-500 sm:text-base">
-                  I continuously explore emerging technologies in Artificial Intelligence,
-                  Agentic AI, Data Science, and Automation Engineering to stay ahead in the
-                  rapidly evolving tech landscape.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {["Business-focused", "Data-driven", "Production-ready"].map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-400 transition-colors duration-300 hover:border-violet-500/30 hover:text-gray-200"
-                  >
-                    {tag}
-                  </span>
+            <Reveal delay={0.1} className="card mt-8 p-6 sm:p-7 lg:mt-auto">
+              <h3 className="font-mono text-xs uppercase tracking-wider text-subtle">What I bring</h3>
+              <ul className="mt-5 space-y-5">
+                {STRENGTHS.map(({ icon: Icon, title, text, tone }) => (
+                  <li key={title} className="flex gap-4">
+                    <span
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                      style={{ background: `color-mix(in srgb, ${tone} 12%, transparent)`, color: tone }}
+                    >
+                      <Icon size={19} aria-hidden />
+                    </span>
+                    <span>
+                      <span className="block font-display text-base font-semibold text-ink">{title}</span>
+                      <span className="mt-1 block text-sm leading-relaxed text-muted">{text}</span>
+                    </span>
+                  </li>
                 ))}
-              </div>
-            </div>
-          </BentoCard>
+              </ul>
+            </Reveal>
+          </div>
 
-          {/* AI branding card */}
-          <BentoCard className="lg:col-span-1" delay={0.08} glow="fuchsia">
-            <div className="flex h-full flex-col">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-fuchsia-500/30 bg-fuchsia-600/15">
-                <HiOutlineChip className="text-xl text-fuchsia-300" />
-              </div>
-              <h3 className="text-lg font-bold">AI Engineer</h3>
-              <p className="mt-2 flex-1 text-sm text-gray-500">
-                Designing intelligent systems from model development to automation workflows
-                and measurable business delivery.
-              </p>
-              <p className="mt-4 font-mono text-2xl font-bold text-fuchsia-300/90">01</p>
-              <p className="text-xs text-gray-500">Build - Train - Deploy</p>
-            </div>
-          </BentoCard>
-
-          {/* Data Science branding */}
-          <BentoCard className="lg:col-span-1" delay={0.12} glow="cyan">
-            <div className="flex h-full flex-col">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-600/15">
-                <HiOutlineChartBar className="text-xl text-cyan-300" />
-              </div>
-              <h3 className="text-lg font-bold">Data Scientist</h3>
-              <p className="mt-2 flex-1 text-sm text-gray-500">
-                Turning raw data into actionable insights, KPI reporting, and dashboards
-                stakeholders can trust.
-              </p>
-              <p className="mt-4 font-mono text-2xl font-bold text-cyan-300/90">02</p>
-              <p className="text-xs text-gray-500">Explore - Model - Explain</p>
-            </div>
-          </BentoCard>
-
-          {/* Focus areas */}
-          <BentoCard className="md:col-span-2 lg:col-span-2" delay={0.16} glow="violet">
-            <h3 className="text-lg font-bold">Core focus</h3>
-            <p className="mt-1 text-sm text-gray-500">Domains I build across daily</p>
-            <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {FOCUS_AREAS.map(({ label, icon: Icon, color }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-3 transition-all duration-300 hover:border-white/15 hover:bg-white/[0.06] hover:shadow-[0_0_24px_rgba(139,92,246,0.08)]"
-                >
-                  <Icon className={`shrink-0 text-lg ${color}`} />
-                  <span className="text-sm font-medium text-gray-300">{label}</span>
-                </li>
-              ))}
-            </ul>
-          </BentoCard>
-
-          {/* Stack */}
-          <BentoCard className="lg:col-span-2" delay={0.2} glow="cyan">
-            <h3 className="text-lg font-bold">Tech stack</h3>
-            <p className="mt-1 text-sm text-gray-500">Tools behind the solutions</p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {STACK.map(({ name, icon: Icon }) => (
-                <motion.div
-                  key={name}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-gray-300 transition-[border-color,box-shadow] duration-300 hover:border-violet-500/35 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]"
-                >
-                  <Icon className="text-lg text-violet-300" />
-                  {name}
-                </motion.div>
-              ))}
-              {["SQL", "PostgreSQL", "Power BI", "Scikit-learn", "Pandas", "NumPy", "Git & GitHub"].map((tool) => (
-                <motion.span
-                  key={tool}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-gray-400 transition-[border-color,box-shadow] duration-300 hover:border-cyan-500/30 hover:text-gray-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
-                >
-                  {tool}
-                </motion.span>
-              ))}
-            </div>
-          </BentoCard>
-
-          {/* Education timeline */}
-          <BentoCard className="md:col-span-2 lg:col-span-2 lg:row-span-2" delay={0.24} glow="violet">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold sm:text-xl">Education</h3>
-                <p className="mt-1 text-sm text-gray-500">Academic journey</p>
-              </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                <HiOutlineGlobeAlt className="text-lg text-violet-300" />
-              </div>
-            </div>
-            <EducationTimeline />
-          </BentoCard>
-
-          {/* Highlight stat cards */}
-          <BentoCard className="lg:col-span-1" delay={0.28} glow="fuchsia">
-            <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Projects</p>
-            <p className="mt-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-4xl font-bold text-transparent">
-              12+
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              End-to-end AI, analytics & automation builds
-            </p>
-          </BentoCard>
-
-          <BentoCard className="lg:col-span-1" delay={0.32} glow="cyan">
-            <p className="font-mono text-xs uppercase tracking-wider text-gray-500">Certifications</p>
-            <p className="mt-2 bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-4xl font-bold text-transparent">
-              8+
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              AI, automation & data credentials
-            </p>
-          </BentoCard>
+          <Reveal delay={0.1}>
+            <ProfileCard />
+          </Reveal>
         </div>
       </div>
-    </Revealer>
+    </section>
   );
 }

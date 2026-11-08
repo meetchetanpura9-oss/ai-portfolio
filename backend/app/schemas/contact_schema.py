@@ -10,13 +10,15 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 PHONE_PATTERN = re.compile(r"^\+?[\d\s\-().]{7,20}$")
 
+# Suggested services shown in the form. Visitors can also type their own service,
+# so any non-empty text up to 120 characters is accepted.
 SERVICE_OPTIONS = [
-    "Machine Learning Consulting",
+    "AI Agent / Workflow Automation",
+    "AI / LLM Application",
+    "Machine Learning Model",
     "Data Analytics & BI",
-    "AI / LLM Development",
-    "Deep Learning Solutions",
+    "Web / Business Software",
     "Mentorship / Collaboration",
-    "Other",
 ]
 
 
@@ -50,9 +52,11 @@ class ContactCreate(BaseModel):
     @field_validator("service")
     @classmethod
     def validate_service(cls, v: str) -> str:
-        if v not in SERVICE_OPTIONS:
-            raise ValueError(f"Service must be one of: {', '.join(SERVICE_OPTIONS)}")
-        return v
+        # Collapse whitespace/newlines so custom services stay on one line in notifications.
+        cleaned = " ".join(v.split())
+        if len(cleaned) < 2:
+            raise ValueError("Please describe the service you need")
+        return cleaned
 
     @field_validator("website")
     @classmethod

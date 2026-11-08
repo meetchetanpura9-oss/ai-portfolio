@@ -1,152 +1,167 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { ArchSection } from "./ui/TextEffects";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SKILL_CATEGORIES } from "../data/skills";
-import OrbitingIcons from "./OrbitingIcons";
-import SkillProgressBar from "./SkillProgressBar";
-import Revealer from "./motion/Revealer";
+import SectionHeader from "./ui/SectionHeader";
+import Reveal from "./ui/Reveal";
 
-const headerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
+/** Wider cards in the bento grid — keeps 7 categories filling full rows. */
+const SPAN = {
+  ml: "md:col-span-2 lg:col-span-2",
+  agentic: "lg:col-span-2",
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
+const totalSkills = new Set(SKILL_CATEGORIES.flatMap((c) => c.skills.map((s) => s.name))).size;
 
-const panelVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
-};
-
+/**
+ * Skills as a capability matrix: one compact card per domain with its tools as pills.
+ * Phones get a swipeable snap carousel (one card tall); md+ gets a bento grid.
+ */
 export default function Skills() {
-  const [activeId, setActiveId] = useState(SKILL_CATEGORIES[0].id);
-  const active = SKILL_CATEGORIES.find((c) => c.id === activeId) ?? SKILL_CATEGORIES[0];
+  const trackRef = useRef(null);
+  const [active, setActive] = useState(0);
+
+  // Track which card is centred in the mobile carousel.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return undefined;
+    const onScroll = () => {
+      const cards = [...track.children];
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let best = 0;
+      cards.forEach((card, i) => {
+        const mid = card.offsetLeft + card.offsetWidth / 2;
+        if (Math.abs(mid - center) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - center)) best = i;
+      });
+      setActive(best);
+    };
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = (i) => {
+    const track = trackRef.current;
+    const card = track?.children[i];
+    if (!card) return;
+    track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: "smooth" });
+  };
 
   return (
-    <Revealer
-      id="skills"
-      className="relative overflow-hidden border-t border-white/5 bg-surface py-20 sm:py-28"
-    >
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute left-0 top-1/3 h-[400px] w-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
-        <div className="absolute bottom-0 right-0 h-[320px] w-[320px] rounded-full bg-cyan-600/8 blur-[100px]" />
-      </div>
+    <ArchSection id="skills" aria-labelledby="skills-title" className="section bg-bg-elevated">
+      <div className="container-x">
+        <SectionHeader
+          id="skills-title"
+          index="02"
+          label="skills"
+          title="The stack behind"
+          highlight="intelligent systems"
+          lead="From classical machine learning to LLM-powered agents — plus the backend and frontend engineering that turns models into products."
+        />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
-        <motion.header
-          variants={headerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-10%" }}
-          className="mb-10 max-w-2xl sm:mb-14"
-        >
-          <motion.p
-            variants={fadeUp}
-            className="font-mono text-xs uppercase tracking-[0.2em] text-violet-400 sm:text-sm"
-          >
-            Core Expertise
-          </motion.p>
-          <motion.h2
-            variants={fadeUp}
-            className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
-          >
-            Skills for{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
-              AI, automation & analytics
-            </span>
-          </motion.h2>
-          <motion.p variants={fadeUp} className="mt-4 text-base text-gray-400 sm:text-lg">
-            Python, Machine Learning, Deep Learning, SQL, Power BI, and automation
-            tools I use to ship intelligent, measurable solutions.
-          </motion.p>
-        </motion.header>
-
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-8%" }}
-            transition={{ duration: 0.6 }}
-          >
-            <OrbitingIcons
-              key={activeId}
-              icons={active.orbitIcons}
-              label={active.label.split(" ")[0]}
-            />
-            <p className="mt-6 text-center text-sm text-gray-500">
-              Orbiting stack for{" "}
-              <span className="text-violet-300">{active.label}</span>
+        {/* summary strip */}
+        <Reveal>
+          <div className="flex items-center justify-between gap-4 border-y border-line py-3">
+            <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-subtle">
+              <span className="text-ink">{totalSkills}</span> technologies
+              <span className="mx-2 text-line-strong">/</span>
+              <span className="text-ink">{SKILL_CATEGORIES.length}</span> domains
             </p>
-          </motion.div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-6 lg:p-8">
-            <div
-              role="tablist"
-              aria-label="Skill categories"
-              className="flex flex-wrap gap-2 border-b border-white/10 pb-5"
-            >
-              {SKILL_CATEGORIES.map((cat) => {
-                const Icon = cat.tabIcon;
-                const isActive = cat.id === activeId;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setActiveId(cat.id)}
-                    className={`relative inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium transition-all duration-300 sm:px-4 sm:text-sm ${
-                      isActive
-                        ? "border border-violet-500/40 bg-violet-600/20 text-violet-100 shadow-[0_0_28px_rgba(139,92,246,0.25)]"
-                        : "border border-transparent text-gray-500 hover:border-white/10 hover:bg-white/5 hover:text-gray-300 hover:shadow-[0_0_20px_rgba(139,92,246,0.08)]"
-                    }`}
-                  >
-                    <Icon className={isActive ? "text-violet-300" : "text-gray-500"} />
-                    <span className="hidden sm:inline">{cat.label}</span>
-                    <span className="sm:hidden">{cat.label.split(" ")[0]}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeId}
-                role="tabpanel"
-                variants={panelVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="mt-6"
+            {/* mobile carousel controls */}
+            <div className="flex items-center gap-1.5 md:hidden">
+              <button
+                type="button"
+                onClick={() => goTo(Math.max(0, active - 1))}
+                disabled={active === 0}
+                className="icon-btn !h-8 !w-8 disabled:opacity-40"
+                aria-label="Previous skill category"
               >
-                <div className="mb-5 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">{active.label}</h3>
-                  <span className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-cyan-300">
-                    Proficiency
-                  </span>
-                </div>
-                <ul className="space-y-1">
-                  {active.skills.map((skill, i) => (
-                    <SkillProgressBar
-                      key={skill.name}
-                      name={skill.name}
-                      level={skill.level}
-                      index={i}
-                    />
-                  ))}
-                </ul>
-              </motion.div>
-            </AnimatePresence>
+                <ChevronLeft size={16} aria-hidden />
+              </button>
+              <span className="w-10 text-center font-mono text-xs text-muted" aria-live="polite">
+                {String(active + 1).padStart(2, "0")}/{String(SKILL_CATEGORIES.length).padStart(2, "0")}
+              </span>
+              <button
+                type="button"
+                onClick={() => goTo(Math.min(SKILL_CATEGORIES.length - 1, active + 1))}
+                disabled={active === SKILL_CATEGORIES.length - 1}
+                className="icon-btn !h-8 !w-8 disabled:opacity-40"
+                aria-label="Next skill category"
+              >
+                <ChevronRight size={16} aria-hidden />
+              </button>
+            </div>
           </div>
+        </Reveal>
+
+        {/* cards: carousel on phones, bento grid from md */}
+        <Reveal>
+          <ul
+            ref={trackRef}
+            aria-label="Skill categories"
+            className="-mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-3"
+          >
+            {SKILL_CATEGORIES.map((cat, i) => (
+              <li key={cat.id} className={`w-[86%] shrink-0 snap-center sm:w-[60%] md:w-auto ${SPAN[cat.id] ?? ""}`}>
+                <CategoryCard category={cat} index={i} />
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        {/* mobile progress dots */}
+        <div className="mt-4 flex justify-center gap-1.5 md:hidden">
+          {SKILL_CATEGORIES.map((cat, i) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Show ${cat.label}`}
+              aria-current={i === active}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? "w-6 bg-brand-blue" : "w-1.5 bg-line-strong"}`}
+            />
+          ))}
         </div>
       </div>
-    </Revealer>
+    </ArchSection>
+  );
+}
+
+function CategoryCard({ category, index }) {
+  const { label, icon: Icon, tone, skills } = category;
+  return (
+    <article className="card card-interactive group relative flex h-full flex-col overflow-hidden p-5">
+      {/* accent line */}
+      <span className="absolute inset-x-0 top-0 h-0.5 opacity-70" style={{ background: tone }} aria-hidden />
+
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-105"
+            style={{ background: `color-mix(in srgb, ${tone} 13%, transparent)`, color: tone }}
+          >
+            <Icon size={19} aria-hidden />
+          </span>
+          <div>
+            <h3 className="font-display text-base font-semibold leading-tight text-ink">{label}</h3>
+            <p className="mt-0.5 text-xs text-subtle">
+              {skills.length} {skills.length === 1 ? "skill" : "skills"}
+            </p>
+          </div>
+        </div>
+        <span className="font-mono text-xs text-subtle">{String(index + 1).padStart(2, "0")}</span>
+      </header>
+
+      <ul className="mt-5 flex flex-wrap gap-2">
+        {skills.map(({ name, icon: SkillIcon }) => (
+          <li
+            key={name}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-2/60 px-2.5 py-1.5 text-[0.8rem] font-medium text-ink"
+          >
+            <SkillIcon size={14} style={{ color: tone }} aria-hidden />
+            {name}
+          </li>
+        ))}
+      </ul>
+    </article>
   );
 }

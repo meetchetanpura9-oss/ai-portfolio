@@ -1,235 +1,219 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HiMenuAlt3, HiX } from "react-icons/hi";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Menu, X, ArrowUpRight } from "lucide-react";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { useScrollTo } from "../hooks/useSmoothScroll";
+import { NAV_LINKS, PROFILE } from "../data/profile";
+import ThemeToggle from "./ui/ThemeToggle";
 
-const links = [
-  { label: "Home", href: "#hero" },
-  { label: "About", href: "#about" },
-  { label: "Services", href: "#services" },
-  { label: "Projects", href: "#projects" },
-  { label: "Skills", href: "#skills" },
-  { label: "Contact", href: "#contact" },
-];
+const NAV_OFFSET = -72;
+
+function Logo({ onClick }) {
+  return (
+    <a
+      href="#home"
+      onClick={onClick}
+      className="group flex items-center gap-2.5 rounded-lg"
+      aria-label={`${PROFILE.name} — back to top`}
+    >
+      <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563eb] via-[#4f46e5] to-[#7c3aed] font-display text-sm font-bold text-white shadow-[0_6px_18px_-6px_rgb(79_70_229/0.7)]">
+        {PROFILE.initials}
+        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-brand-cyan" />
+      </span>
+      <span className="hidden font-display text-[0.95rem] font-semibold text-ink sm:inline">{PROFILE.name}</span>
+    </a>
+  );
+}
 
 export default function Navbar() {
   const scrollTo = useScrollTo();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showNav, setShowNav] = useState(true);
-  const [activeSection, setActiveSection] = useState("hero");
+  const [active, setActive] = useState("home");
+  const drawerRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  const handleNav = (href) => {
-    // 1. Close menu first to restore body/html scrollability immediately so the page can scroll
+  const go = (id) => (e) => {
+    e?.preventDefault();
     setOpen(false);
-    
-    // 2. Initiate smooth scrolling after a micro-delay to let the browser process the overflow style change
-    setTimeout(() => {
-      scrollTo(href, { offset: -80 });
-    }, 30);
+    // let the drawer release the scroll lock before scrolling
+    window.setTimeout(() => {
+      scrollTo(`#${id}`, { offset: id === "home" ? 0 : NAV_OFFSET });
+      history.replaceState(null, "", id === "home" ? window.location.pathname : `#${id}`);
+    }, 20);
   };
 
-  // Lock body & document scroll when mobile menu is open (for robust iOS support)
+  // Elevated style once the page scrolls.
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-
-      requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-        setScrolled(currentY > 24);
-        
-        // Show navbar when scrolling up or near top. Hide when scrolling down.
-        // If the mobile menu is open, always show the header.
-        if (open) {
-          setShowNav(true);
-        } else {
-          setShowNav(currentY < 96 || currentY < lastY);
-        }
-
-        const sections = ["hero", "about", "services", "projects", "playground", "skills", "why-work-with-me", "contact"];
-        const offset = currentY + window.innerHeight * 0.35;
-        let currentSection = "hero";
-
-        sections.forEach((id) => {
-          const element = document.getElementById(id);
-          if (element && element.offsetTop <= offset) {
-            currentSection = id;
-          }
-        });
-
-        setActiveSection(currentSection);
-        lastY = currentY;
-        ticking = false;
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Active section tracking.
+  useEffect(() => {
+    const sections = NAV_LINKS.map(({ id }) => document.getElementById(id)).filter(Boolean);
+    if (!sections.length) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: "-35% 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] }
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
+  // Drawer: scroll lock, Escape, focus management.
+  useEffect(() => {
+    if (!open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const t = window.setTimeout(() => drawerRef.current?.querySelector("a,button")?.focus(), 60);
+    const toggleEl = toggleRef.current;
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(t);
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+      toggleEl?.focus();
+    };
   }, [open]);
 
   return (
     <>
-      <motion.header
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-12 transition-transform duration-300 ease-out ${
-          showNav ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-        }`}
-      >
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
         <nav
-          className={`mx-auto flex max-w-7xl items-center justify-between rounded-2xl border px-4 py-3 shadow-[0_18px_60px_rgba(0,0,0,0.25)] backdrop-blur-2xl transition-all duration-500 sm:px-6 ${
+          aria-label="Primary"
+          className={`mx-auto flex max-w-[76rem] items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-300 sm:px-4 ${
             scrolled
-              ? "bg-white/10 border-white/10"
-              : "bg-white/5 border-white/5"
+              ? "border-line bg-surface/80 shadow-[var(--shadow-nav)] backdrop-blur-xl"
+              : "border-transparent bg-transparent"
           }`}
         >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              handleNav("#hero");
-            }}
-            className="text-lg font-bold tracking-tight cursor-pointer"
-          >
-            <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">
-              CM
-            </span>
-            <span className="text-white/90">.</span>
-          </button>
+          <Logo onClick={go("home")} />
 
-          {/* Desktop Links */}
-          <ul className="hidden items-center gap-1 md:flex">
-            {links.map((link) => {
-              const active = activeSection === link.href.slice(1);
+          <ul className="hidden items-center gap-0.5 lg:flex">
+            {NAV_LINKS.map(({ id, label }) => {
+              const isActive = active === id;
               return (
-                <li key={link.href}>
-                  <button
-                    type="button"
-                    onClick={() => handleNav(link.href)}
-                    className={`rounded-lg px-4 py-2 text-sm transition-colors cursor-pointer ${
-                      active
-                        ? "text-white bg-white/5"
-                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                <li key={id}>
+                  <a
+                    href={`#${id}`}
+                    onClick={go(id)}
+                    aria-current={isActive ? "true" : undefined}
+                    className={`relative isolate block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      isActive ? "text-ink" : "text-muted hover:text-ink"
                     }`}
                   >
-                    {link.label}
-                  </button>
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-0 -z-10 rounded-lg bg-surface-2"
+                        transition={{ type: "spring", bounce: 0.18, duration: 0.5 }}
+                      />
+                    )}
+                    {label}
+                  </a>
                 </li>
               );
             })}
           </ul>
 
-          <motion.button
-            type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleNav("#contact")}
-            className="hidden rounded-xl border border-violet-500/40 bg-violet-600/20 px-4 py-2 text-sm font-medium text-violet-200 shadow-[0_0_24px_rgba(139,92,246,0.25)] transition-shadow hover:shadow-[0_0_32px_rgba(139,92,246,0.4)] md:inline-block cursor-pointer"
-          >
-            Let&apos;s Connect
-          </motion.button>
-
-          {/* Mobile menu hamburger toggle */}
-          <button
-            type="button"
-            aria-label={open ? "Close menu" : "Open menu"}
-            className="rounded-2xl border border-white/10 bg-white/5 p-2 text-gray-300 transition-colors hover:border-violet-400/40 hover:bg-white/10 md:hidden cursor-pointer"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <HiX size={22} /> : <HiMenuAlt3 size={22} />}
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a href="#contact" onClick={go("contact")} className="btn btn-primary hidden !px-4 !py-2 text-sm sm:inline-flex">
+              Let&apos;s talk <ArrowUpRight size={16} aria-hidden />
+            </a>
+            <button
+              ref={toggleRef}
+              type="button"
+              className="icon-btn lg:hidden"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              aria-controls="mobile-drawer"
+              onClick={() => setOpen((v) => !v)}
+            >
+              {open ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
+            </button>
+          </div>
         </nav>
-      </motion.header>
+      </header>
 
-      {/* Premium Full-Screen Mobile Navigation Overlay */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ type: "spring", bounce: 0.05, duration: 0.55 }}
-            className="fixed inset-0 z-[60] flex flex-col bg-[#050816]/98 backdrop-blur-2xl md:hidden"
-          >
-            {/* Header spacer in full-screen overlay */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#050816]/50">
-              <span className="text-lg font-bold bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">
-                CM.
-              </span>
-              <button
-                type="button"
-                aria-label="Close menu"
-                className="rounded-2xl border border-white/10 bg-white/5 p-2 text-gray-300 transition-colors cursor-pointer"
-                onClick={() => setOpen(false)}
-              >
-                <HiX size={22} />
-              </button>
-            </div>
+          <>
+            <motion.div
+              className="fixed inset-0 z-[60] bg-[#050913]/50 backdrop-blur-sm lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+            <motion.aside
+              id="mobile-drawer"
+              ref={drawerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site navigation"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.42 }}
+              className="fixed inset-y-0 right-0 z-[70] flex w-[min(340px,86vw)] flex-col border-l border-line bg-surface px-6 pb-8 pt-5 lg:hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="eyebrow">(menu)</span>
+                <button type="button" className="icon-btn" aria-label="Close menu" onClick={() => setOpen(false)}>
+                  <X size={18} aria-hidden />
+                </button>
+              </div>
 
-            {/* Vertically Staggered Navigation Items */}
-            <div className="flex-1 flex flex-col justify-center px-8 space-y-12">
-              <ul className="space-y-6">
-                {links.map((link, i) => {
-                  const active = activeSection === link.href.slice(1);
+              <ul className="mt-8 space-y-1">
+                {NAV_LINKS.map(({ id, label }, i) => {
+                  const isActive = active === id;
                   return (
                     <motion.li
-                      key={link.href}
-                      initial={{ opacity: 0, x: 40 }}
+                      key={id}
+                      initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.07, ease: "easeOut" }}
+                      transition={{ delay: 0.05 + i * 0.04 }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => handleNav(link.href)}
-                        className={`block w-full py-2 text-left text-3xl font-bold font-display transition-colors cursor-pointer ${
-                          active
-                            ? "bg-gradient-to-r from-violet-400 to-cyan-300 bg-clip-text text-transparent"
-                            : "text-gray-400 hover:text-white"
+                      <a
+                        href={`#${id}`}
+                        onClick={go(id)}
+                        aria-current={isActive ? "true" : undefined}
+                        className={`flex items-baseline gap-4 rounded-xl px-3 py-3 font-display text-xl font-semibold transition-colors ${
+                          isActive ? "bg-surface-2 text-ink" : "text-muted hover:text-ink"
                         }`}
                       >
-                        <span className="text-violet-500 font-mono text-sm mr-4">0{i + 1}.</span>
-                        {link.label}
-                      </button>
+                        <span className="font-mono text-xs font-normal text-brand-blue">0{i}</span>
+                        {label}
+                      </a>
                     </motion.li>
                   );
                 })}
               </ul>
 
-              {/* Extra details & call to action in overlay */}
-              <div className="border-t border-white/5 pt-8 space-y-5">
-                <button
-                  type="button"
-                  onClick={() => handleNav("#contact")}
-                  className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-3.5 text-center font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.35)] cursor-pointer"
-                >
-                  Let&apos;s Connect
-                </button>
-                <div className="text-center text-xs text-gray-500 font-mono">
-                  meetchetanpura9@gmail.com
+              <div className="mt-auto space-y-4 border-t border-line pt-6">
+                <a href="#contact" onClick={go("contact")} className="btn btn-primary w-full">
+                  Let&apos;s talk <ArrowUpRight size={16} aria-hidden />
+                </a>
+                <div className="flex items-center justify-center gap-2">
+                  <a href={PROFILE.github} target="_blank" rel="noopener noreferrer" className="icon-btn" aria-label="GitHub">
+                    <FaGithub aria-hidden />
+                  </a>
+                  <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" className="icon-btn" aria-label="LinkedIn">
+                    <FaLinkedin aria-hidden />
+                  </a>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </>

@@ -67,8 +67,12 @@ module.exports = async (req, res) => {
         const mailServer = process.env.MAIL_SERVER || "smtp.gmail.com";
     const mailPort = parseInt(process.env.MAIL_PORT || "587", 10);
     const mailUser = process.env.MAIL_USERNAME || "meetchetanpura9@gmail.com";
-    // Gmail App Password
-    const mailPass = process.env.MAIL_PASSWORD || "jcqa snot clus xkig"; 
+    // Gmail App Password — must come from the MAIL_PASSWORD env var, never from source code.
+    const mailPass = process.env.MAIL_PASSWORD;
+    if (!mailPass) {
+      res.status(503).json({ detail: "Email delivery is not configured." });
+      return;
+    }
     const adminEmail = process.env.ADMIN_EMAIL || "meetchetanpura9@gmail.com";
     const siteName = process.env.SITE_NAME || "Chetanpura Meet — AI Portfolio";
 

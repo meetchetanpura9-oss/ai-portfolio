@@ -1,31 +1,104 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Theme bootstrap — runs before first paint so the page never flashes the wrong theme.
+      Order: saved choice → system preference. Admin pages are always dark.
+    -->
+    <script>
+      (function () {
+        var theme = "light";
+        try {
+          var path = window.location.pathname;
+          if (path.indexOf("/admin") === 0 || path.indexOf("/login") === 0) {
+            theme = "dark";
+          } else {
+            var saved = localStorage.getItem("theme");
+            if (saved === "light" || saved === "dark") theme = saved;
+            else if (window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
+          }
+        } catch (e) {}
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE_HERE" />
-    <title>Meet Chetanpura | AI Engineer | Automation Specialist | Data Analyst</title>
-    <meta name="description" content="Meet Chetanpura's portfolio website showcasing AI engineering, automation, data analytics, and software development projects." />
-    <meta name="keywords" content="Meet Chetanpura, AI Engineer, Automation Specialist, Data Analyst, Portfolio, Machine Learning, Python, Power BI, SQL, Ahmedabad, Gujarat, India" />
+    <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070b16" media="(prefers-color-scheme: dark)" />
+
+    <title>Meet Chetanpura | AI/ML &amp; Agentic AI Developer</title>
+    <meta name="description" content="Meet Chetanpura is an AI/ML and Agentic AI developer building intelligent applications, AI-powered systems and autonomous agent workflows." />
+    <meta name="keywords" content="Meet Chetanpura, AI Developer, Machine Learning, Agentic AI, AI Agents, Multi-Agent Systems, Generative AI, LLM, RAG, LangChain, Python, Gujarat, India" />
     <meta name="author" content="Meet Chetanpura" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Meet Chetanpura | AI Engineer | Automation Specialist | Data Analyst" />
-    <meta property="og:description" content="Meet Chetanpura's portfolio website showcasing AI engineering, automation, data analytics, and software development projects." />
-    <meta property="og:image" content="/linkedin.jpg" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <!-- Canonical host is www — Vercel 308-redirects the apex domain here. -->
+    <link rel="canonical" href="https://www.meetchetanpura.in/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content="Meet Chetanpura" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:url" content="https://www.meetchetanpura.in/" />
+    <meta property="og:title" content="Meet Chetanpura | AI/ML &amp; Agentic AI Developer" />
+    <meta property="og:description" content="Intelligent applications, AI-powered systems and autonomous agent workflows." />
+    <meta property="og:image" content="https://www.meetchetanpura.in/linkedin.jpg" />
+    <meta property="og:image:width" content="640" />
+    <meta property="og:image:height" content="960" />
+    <meta property="og:image:alt" content="Portrait of Meet Chetanpura" />
+    <meta property="profile:first_name" content="Meet" />
+    <meta property="profile:last_name" content="Chetanpura" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="Meet Chetanpura | AI Engineer | Automation Specialist | Data Analyst" />
-    <meta property="twitter:description" content="Meet Chetanpura's portfolio website showcasing AI engineering, automation, data analytics, and software development projects." />
-    <meta property="twitter:image" content="/linkedin.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Meet Chetanpura | AI/ML &amp; Agentic AI Developer" />
+    <meta name="twitter:description" content="Intelligent applications, AI-powered systems and autonomous agent workflows." />
+    <meta name="twitter:image" content="https://www.meetchetanpura.in/linkedin.jpg" />
+    <meta name="twitter:image:alt" content="Portrait of Meet Chetanpura" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://www.meetchetanpura.in/#person",
+            "name": "Meet Chetanpura",
+            "givenName": "Meet",
+            "familyName": "Chetanpura",
+            "jobTitle": "AI/ML & Agentic AI Developer",
+            "description": "AI/ML and Agentic AI developer building intelligent applications, AI-powered systems and autonomous agent workflows.",
+            "url": "https://www.meetchetanpura.in/",
+            "image": "https://www.meetchetanpura.in/portrait.jpg",
+            "email": "mailto:meetchetanpura9@gmail.com",
+            "address": { "@type": "PostalAddress", "addressRegion": "Gujarat", "addressCountry": "IN" },
+            "knowsAbout": ["Machine Learning", "Agentic AI", "AI Agents", "Generative AI", "Large Language Models", "Retrieval-Augmented Generation", "Python", "Data Analytics"],
+            "sameAs": [
+              "https://github.com/meetchetanpura9-oss",
+              "https://www.linkedin.com/in/meet-chetanpura"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.meetchetanpura.in/#website",
+            "url": "https://www.meetchetanpura.in/",
+            "name": "Meet Chetanpura",
+            "alternateName": ["Meet Chetanpura Portfolio", "meetchetanpura.in"],
+            "inLanguage": "en",
+            "publisher": { "@id": "https://www.meetchetanpura.in/#person" },
+            "about": { "@id": "https://www.meetchetanpura.in/#person" }
+          }
+        ]
+      }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Sora:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>

@@ -1,54 +1,31 @@
 import { motion } from "framer-motion";
-import { HiCheckCircle } from "react-icons/hi";
+import { CheckCircle2 } from "lucide-react";
 
 export default function SuccessState({ onReset, email }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.92 }}
+      initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col items-center justify-center py-16 text-center"
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col items-center justify-center py-14 text-center"
+      role="status"
     >
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
-        className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 shadow-[0_0_48px_rgba(52,211,153,0.25)]"
+        className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-emerald/12 text-brand-emerald"
       >
-        <HiCheckCircle className="text-4xl text-emerald-400" />
+        <CheckCircle2 size={32} aria-hidden />
       </motion.div>
-      <motion.h3
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="text-2xl font-bold text-white"
-      >
-        Message sent successfully
-      </motion.h3>
-      <motion.p
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        className="mt-3 max-w-sm text-sm text-gray-400"
-      >
-        Thank you for reaching out. A confirmation email has been sent to{' '}
-        <span className="font-medium text-white">
-          {email ?? "your address"}
-        </span>
-        , and I&apos;ll respond as soon as possible.
-      </motion.p>
-      <motion.button
-        type="button"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={onReset}
-        className="mt-8 rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-violet-500/30 hover:text-white"
-      >
+      <h3 className="text-2xl font-semibold text-ink">Message sent</h3>
+      <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
+        Thank you for reaching out. A confirmation email has been sent to{" "}
+        <span className="font-medium text-ink">{email ?? "your address"}</span>, and I&apos;ll get back to you soon.
+      </p>
+      <button type="button" onClick={onReset} className="btn btn-ghost mt-8 text-sm">
         Send another message
-      </motion.button>
+      </button>
     </motion.div>
   );
 }

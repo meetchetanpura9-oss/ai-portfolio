@@ -1,21 +1,26 @@
-/** Service dropdown options — must match backend SERVICE_OPTIONS */
+import { PROFILE } from "../../data/profile";
+
+/** Choosing this option reveals a text field so the visitor can describe their own service. */
+export const CUSTOM_SERVICE = "Other (describe your own)";
+
+/** Service dropdown options. The backend also accepts any custom service text. */
 export const SERVICE_OPTIONS = [
-  "Machine Learning Consulting",
+  "AI Agent / Workflow Automation",
+  "AI / LLM Application",
+  "Machine Learning Model",
   "Data Analytics & BI",
-  "AI / LLM Development",
-  "Deep Learning Solutions",
+  "Web / Business Software",
   "Mentorship / Collaboration",
-  "Other",
+  CUSTOM_SERVICE,
 ];
 
-/** Public contact links — customize or use VITE_ env vars */
+/** Public contact links — sourced from data/profile.js */
 export const CONTACT_LINKS = {
-  email: import.meta.env.VITE_CONTACT_EMAIL || "meetchetanpura9@gmail.com",
-  linkedin:
-    import.meta.env.VITE_CONTACT_LINKEDIN || "https://linkedin.com/in/chetanpurameet",
-  github: import.meta.env.VITE_CONTACT_GITHUB || "https://github.com/meetchetanpura9-oss",
-  location: import.meta.env.VITE_CONTACT_LOCATION || "Gujarat, India",
-  available: true,
+  email: PROFILE.email,
+  linkedin: PROFILE.linkedin,
+  github: PROFILE.github,
+  location: PROFILE.location,
+  available: PROFILE.available,
 };
 
 export const INITIAL_FORM = {
@@ -24,6 +29,7 @@ export const INITIAL_FORM = {
   phone: "",
   company: "",
   service: "",
+  custom_service: "",
   message: "",
   website: "",
 };
