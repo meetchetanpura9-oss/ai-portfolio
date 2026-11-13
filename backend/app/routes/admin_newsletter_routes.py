@@ -10,9 +10,9 @@ import io
 import logging
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -35,6 +35,7 @@ from app.services import campaign_service as campaigns
 from app.services import newsletter_service as svc
 from app.services.auth_service import require_admin
 from app.services.campaign_service import CampaignError
+from app.routes.newsletter_routes import api_base_url
 from app.services.email_delivery import _resend_sender
 
 logger = logging.getLogger(__name__)
@@ -54,30 +55,130 @@ def _status_counts(db: Session) -> dict:
     return counts
 
 
-@router.get("/overview", summary="KPI counts for the dashboard (live database values)")
-def overview(db: Session = Depends(get_db)):
+def _rate(part: int | None, whole: int | None) -> float | None:
+    if part is None or not whole:
+        return None
+    return round(part / whole * 100, 1)
+
+
+def _event_totals(db: Session, campaign_id: int | None = None) -> dict[str, int]:
+    """Unique emails per event type, as reported by Resend webhooks."""
+    query = db.query(NewsletterEmailEvent.event_type,
+                     func.count(func.distinct(NewsletterEmailEvent.resend_email_id)))
+    if campaign_id is not None:
+        query = query.filter(NewsletterEmailEvent.campaign_id == campaign_id)
+    return dict(query.group_by(NewsletterEmailEvent.event_type).all())
+
+
+def _rates(events: dict[str, int]) -> dict:
+    """Rates are None ("not reported") until Resend has reported the events they need."""
+    sent, delivered = events.get("sent"), events.get("delivered")
+    return {
+        "delivery_rate": _rate(delivered, sent),
+        "open_rate": _rate(events.get("opened", 0), delivered) if delivered else None,
+        "click_rate": _rate(events.get("clicked", 0), delivered) if delivered else None,
+        "bounce_rate": _rate(events.get("bounced", 0), sent) if sent else None,
+    }
+
+
+def _daily_counts(db: Session, column, since: datetime) -> dict[str, int]:
+    day = func.date(column)
+    rows = db.query(day, func.count()).filter(column >= since).group_by(day).all()
+    return {str(d)[:10]: n for d, n in rows if d is not None}
+
+
+def _subscriber_growth(db: Session, days: int) -> list[dict]:
+    """Daily sign-ups, confirmations and opt-outs (UTC days), zero-filled."""
+    first = svc.utcnow().date() - timedelta(days=days - 1)
+    since = datetime(first.year, first.month, first.day)
+    signups = _daily_counts(db, NewsletterSubscriber.subscribed_at, since)
+    confirmed = _daily_counts(db, NewsletterSubscriber.confirmed_at, since)
+    left = _daily_counts(db, NewsletterSubscriber.unsubscribed_at, since)
+    series = []
+    for offset in range(days):
+        key = (first + timedelta(days=offset)).isoformat()
+        series.append({"date": key, "signups": signups.get(key, 0), "confirmed": confirmed.get(key, 0),
+                       "unsubscribed": left.get(key, 0)})
+    return series
+
+
+def _subscriber_activity(s: NewsletterSubscriber) -> dict:
+    if s.status in ("unsubscribed", "suppressed") and s.unsubscribed_at:
+        kind, at, source = s.status, s.unsubscribed_at, s.unsubscribe_source
+    elif s.status == "active" and s.confirmed_at:
+        kind, at, source = "confirmed", s.confirmed_at, s.subscription_source
+    else:
+        kind, at, source = "signed_up", s.subscribed_at, s.subscription_source
+    return {"id": s.id, "email": s.email, "status": s.status or "pending", "activity": kind, "at": at,
+            "source": source}
+
+
+def _integration_status(db: Session) -> dict:
+    settings = get_settings()
+    return {
+        "resend_configured": settings.resend_enabled,
+        "segment_configured": bool(settings.newsletter_segment_id),
+        "webhook_configured": bool(settings.RESEND_WEBHOOK_SECRET.strip()),
+        "last_webhook_at": db.query(func.max(NewsletterWebhookEvent.received_at)).scalar(),
+        "pending_sync": campaigns.pending_sync_count(db),
+    }
+
+
+@router.get("/overview", summary="Dashboard metrics, charts and recent activity (live database values)")
+def overview(days: int = Query(30, ge=7, le=90), db: Session = Depends(get_db)):
     campaign_rows = dict(
         db.query(NewsletterCampaign.status, func.count(NewsletterCampaign.id))
         .group_by(NewsletterCampaign.status).all()
+    )
+    events = _event_totals(db)
+    recent_campaigns = (db.query(NewsletterCampaign)
+                        .order_by(NewsletterCampaign.updated_at.desc(), NewsletterCampaign.id.desc()).limit(5).all())
+    recent_subscribers = (
+        db.query(NewsletterSubscriber)
+        .order_by(func.coalesce(NewsletterSubscriber.updated_at, NewsletterSubscriber.subscribed_at).desc(),
+                  NewsletterSubscriber.id.desc())
+        .limit(8).all()
+    )
+    recent_events = (
+        db.query(NewsletterEmailEvent.event_type, NewsletterEmailEvent.occurred_at,
+                 NewsletterCampaign.title, NewsletterSubscriber.email)
+        .outerjoin(NewsletterCampaign, NewsletterCampaign.id == NewsletterEmailEvent.campaign_id)
+        .outerjoin(NewsletterSubscriber, NewsletterSubscriber.id == NewsletterEmailEvent.subscriber_id)
+        .order_by(NewsletterEmailEvent.occurred_at.desc(), NewsletterEmailEvent.id.desc())
+        .limit(10).all()
     )
     return {
         "subscribers": _status_counts(db),
         "campaigns": {
             "total": sum(campaign_rows.values()),
+            # "sent" keeps its original meaning (handed to Resend); the parts are also given.
             "sent": campaign_rows.get("sent", 0) + campaign_rows.get("sending", 0),
+            "completed": campaign_rows.get("sent", 0),
+            "sending": campaign_rows.get("sending", 0),
             "scheduled": campaign_rows.get("scheduled", 0),
             "draft": campaign_rows.get("draft", 0),
+            "failed": campaign_rows.get("failed", 0),
+            "cancelled": campaign_rows.get("cancelled", 0),
         },
         "case_studies": {
             "published": db.query(func.count(CaseStudy.id)).filter(CaseStudy.status == "published").scalar() or 0,
             "draft": db.query(func.count(CaseStudy.id)).filter(CaseStudy.status == "draft").scalar() or 0,
         },
+        # Email metrics come only from Resend webhook events; None = nothing reported yet.
+        "email": {"events_recorded": bool(events), **_rates(events)},
+        "growth": _subscriber_growth(db, days),
+        "recent_campaigns": [_campaign_row(c) for c in recent_campaigns],
+        "recent_subscribers": [_subscriber_activity(s) for s in recent_subscribers],
+        "recent_events": [{"event_type": e.event_type, "occurred_at": e.occurred_at,
+                           "campaign": e.title, "email": e.email} for e in recent_events],
+        "integration": _integration_status(db),
     }
 
 
 @router.get("/settings", summary="Newsletter configuration status (never returns secrets)")
-def newsletter_settings(db: Session = Depends(get_db)):
+def newsletter_settings(request: Request, db: Session = Depends(get_db)):
     settings = get_settings()
+    api_base = api_base_url(request)
     last_webhook = db.query(func.max(NewsletterWebhookEvent.received_at)).scalar()
     return {
         "resend_configured": settings.resend_enabled,
@@ -89,6 +190,10 @@ def newsletter_settings(db: Session = Depends(get_db)):
         "double_opt_in": settings.NEWSLETTER_DOUBLE_OPT_IN,
         "confirmation_hours": settings.NEWSLETTER_CONFIRMATION_HOURS,
         "app_base_url": settings.app_base_url,
+        "api_base_url": api_base,
+        "webhook_url": f"{api_base}/webhooks/resend",
+        # False = Resend's shared test sender is in use (it only delivers to the account owner).
+        "sender_configured": bool(settings.RESEND_FROM.strip()),
         "dedicated_signing_secret": bool(settings.NEWSLETTER_CONFIRMATION_SECRET.strip()),
         "postal_address_configured": bool(settings.NEWSLETTER_POSTAL_ADDRESS.strip()),
         "pending_sync": campaigns.pending_sync_count(db),
@@ -111,6 +216,8 @@ def _subscriber_row(s: NewsletterSubscriber) -> dict:
         "confirmed_at": s.confirmed_at,
         "unsubscribed_at": s.unsubscribed_at,
         "unsubscribe_source": s.unsubscribe_source,
+        "in_resend": bool(s.resend_contact_id),
+        "resend_sync_pending": bool(s.resend_sync_pending),
     }
 
 
@@ -226,8 +333,6 @@ def get_subscriber(subscriber_id: int, db: Session = Depends(get_db)):
         "confirmation_sent_at": s.confirmation_sent_at,
         "confirmation_expires_at": s.confirmation_expires_at,
         "welcome_sent_at": s.welcome_sent_at,
-        "in_resend": bool(s.resend_contact_id),
-        "resend_sync_pending": bool(s.resend_sync_pending),
         "updated_at": s.updated_at,
         "recent_events": [
             {"event_type": e.event_type, "occurred_at": e.occurred_at, "campaign": e.title} for e in events
@@ -312,15 +417,26 @@ def list_campaigns(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     status_filter: str | None = Query(None, alias="status", pattern="^(draft|scheduled|sending|sent|failed|cancelled)$"),
+    search: str | None = Query(None, max_length=200),
     db: Session = Depends(get_db),
 ):
     query = db.query(NewsletterCampaign)
+    if search and search.strip():
+        term = search.strip().replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
+        pattern = f"%{term}%"
+        query = query.filter(or_(NewsletterCampaign.title.ilike(pattern, escape="\\"),
+                                 NewsletterCampaign.subject.ilike(pattern, escape="\\")))
+    # Per-status counts for the filter tabs (they respect the search, not the status filter).
+    counts = dict(query.with_entities(NewsletterCampaign.status, func.count(NewsletterCampaign.id))
+                  .group_by(NewsletterCampaign.status).all())
+    counts["all"] = sum(counts.values())
     if status_filter:
         query = query.filter(NewsletterCampaign.status == status_filter)
     total = query.count()
     rows = (query.order_by(NewsletterCampaign.updated_at.desc(), NewsletterCampaign.id.desc())
             .offset((page - 1) * page_size).limit(page_size).all())
-    return {"items": [_campaign_row(c) for c in rows], "total": total, "page": page, "page_size": page_size}
+    return {"items": [_campaign_row(c) for c in rows], "total": total, "page": page, "page_size": page_size,
+            "counts": counts}
 
 
 @router.post("/campaigns", status_code=status.HTTP_201_CREATED, summary="Create a draft campaign")
@@ -464,13 +580,7 @@ def refresh_campaign(campaign_id: int, db: Session = Depends(get_db)):
 # ===================================================================================
 # Analytics
 # ===================================================================================
-_TRACKED = ("sent", "delivered", "bounced", "complained", "opened", "clicked")
-
-
-def _rate(part: int | None, whole: int | None) -> float | None:
-    if part is None or not whole:
-        return None
-    return round(part / whole * 100, 1)
+_TRACKED = ("sent", "delivered", "bounced", "complained", "opened", "clicked", "failed")
 
 
 @router.get("/analytics", summary="Campaign delivery metrics from Resend webhook events")
@@ -527,9 +637,7 @@ def analytics(limit: int = Query(25, ge=1, le=100), db: Session = Depends(get_db
             **metrics,
             # Resend reports unsubscribes per contact, not per broadcast.
             "unsubscribes": None,
-            "delivery_rate": _rate(metrics["delivered"], metrics["sent"]),
-            "open_rate": _rate(metrics["opened"], metrics["delivered"]),
-            "click_rate": _rate(metrics["clicked"], metrics["delivered"]),
+            **_rates(events or {}),
         })
 
     unsubscribes_total = (
@@ -543,8 +651,40 @@ def analytics(limit: int = Query(25, ge=1, le=100), db: Session = Depends(get_db
             **({key: totals[key] for key in _TRACKED} if any_events else {key: None for key in _TRACKED}),
             "recipients": totals["recipients"],
             "unsubscribes": unsubscribes_total,
-            "delivery_rate": _rate(totals["delivered"], totals["sent"]) if any_events else None,
-            "click_rate": _rate(totals["clicked"], totals["delivered"]) if any_events else None,
+            **_rates(totals if any_events else {}),
         },
         "campaigns": items,
+    }
+
+
+@router.get("/analytics/campaigns/{campaign_id}", summary="One campaign: metrics, daily timeline, recent events")
+def campaign_analytics(campaign_id: int, db: Session = Depends(get_db)):
+    campaign = _get_campaign(db, campaign_id)
+    events = _event_totals(db, campaign.id)
+    has_events = bool(events)
+    day = func.date(NewsletterEmailEvent.occurred_at)
+    timeline: dict[str, dict[str, int]] = {}
+    for d, event_type, count in (
+        db.query(day, NewsletterEmailEvent.event_type,
+                 func.count(func.distinct(NewsletterEmailEvent.resend_email_id)))
+        .filter(NewsletterEmailEvent.campaign_id == campaign.id)
+        .group_by(day, NewsletterEmailEvent.event_type).all()
+    ):
+        timeline.setdefault(str(d)[:10], {})[event_type] = count
+    recent = (
+        db.query(NewsletterEmailEvent.event_type, NewsletterEmailEvent.occurred_at, NewsletterSubscriber.email)
+        .outerjoin(NewsletterSubscriber, NewsletterSubscriber.id == NewsletterEmailEvent.subscriber_id)
+        .filter(NewsletterEmailEvent.campaign_id == campaign.id)
+        .order_by(NewsletterEmailEvent.occurred_at.desc(), NewsletterEmailEvent.id.desc())
+        .limit(50).all()
+    )
+    return {
+        **_campaign_row(campaign),
+        "recipients": campaign.recipient_count,
+        "tracking_available": has_events,
+        **{key: (events.get(key, 0) if has_events else None) for key in _TRACKED},
+        **_rates(events),
+        "timeline": [{"date": key, **timeline[key]} for key in sorted(timeline)],
+        "recent_events": [{"event_type": e.event_type, "occurred_at": e.occurred_at, "email": e.email}
+                          for e in recent],
     }

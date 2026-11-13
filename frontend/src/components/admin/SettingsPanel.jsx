@@ -67,7 +67,7 @@ export default function SettingsPanel() {
     <div className="mt-8 space-y-6">
       <Panel
         title="Newsletter setup"
-        description="Values are set as environment variables on the server (Render). Secrets are never shown here."
+        description="Read-only status. Values are environment variables on the server (Render); keys and secrets are never sent to the browser."
         actions={
           <Button icon={RefreshCw} onClick={load} loading={loading && !!cfg}>
             Re-check
@@ -89,7 +89,16 @@ export default function SettingsPanel() {
                 </>
               )}
             </Check>
-            <Check ok={cfg.segment_configured} label="Resend audience segment">
+            <Check ok={cfg.resend_configured && cfg.sender_configured} label="Sender email">
+              {cfg.sender_configured ? (
+                <>Newsletters are sent from your own verified address.</>
+              ) : (
+                <>
+                  Set <span className={code}>RESEND_FROM</span> to an address on your verified domain. Without it Resend's shared test sender is used, which only delivers to your own account.
+                </>
+              )}
+            </Check>
+            <Check ok={cfg.segment_configured} label="Newsletter segment">
               {cfg.segment_configured ? "Confirmed subscribers are synced to your Resend segment." : (
                 <>
                   Set <span className={code}>RESEND_NEWSLETTER_SEGMENT_ID</span> so campaigns know who to send to.
@@ -98,12 +107,17 @@ export default function SettingsPanel() {
             </Check>
             <Check ok={cfg.webhook_secret_configured} label="Resend webhook">
               {cfg.webhook_secret_configured ? (
-                <>Signing secret set. Last event received: {cfg.last_webhook_at ? formatDate(cfg.last_webhook_at, true) : "none yet"}.</>
+                <>
+                  Signing secret set. Endpoint: <span className={code}>{cfg.webhook_url}</span>
+                </>
               ) : (
                 <>
-                  In Resend, add a webhook pointing to <span className={code}>{"<API URL>"}/webhooks/resend</span> and set <span className={code}>RESEND_WEBHOOK_SECRET</span>. Needed for delivery analytics, bounces and complaints.
+                  In Resend, add a webhook pointing to <span className={code}>{cfg.webhook_url}</span> and set <span className={code}>RESEND_WEBHOOK_SECRET</span>. Needed for delivery analytics, bounces and complaints.
                 </>
               )}
+            </Check>
+            <Check ok={!!cfg.last_webhook_at} optional label="Last webhook received">
+              {cfg.last_webhook_at ? formatDate(cfg.last_webhook_at, true) : "No event received yet. Events arrive after the first campaign is sent (or use “Send test” in Resend's webhook page)."}
             </Check>
             <Check ok={!!cfg.admin_email} label="Admin email (test sends)">
               {cfg.admin_email ? (
@@ -118,13 +132,16 @@ export default function SettingsPanel() {
             </Check>
             <Check ok={cfg.double_opt_in} label="Double opt-in">
               {cfg.double_opt_in
-                ? `On. Confirmation links expire after ${cfg.confirmation_hours} hours.`
+                ? "On. A new subscriber becomes active only after clicking the link in the confirmation email."
                 : "Off — new signups become active immediately. Turning NEWSLETTER_DOUBLE_OPT_IN on is strongly recommended."}
+            </Check>
+            <Check ok label="Confirmation email">
+              Links expire after <strong className="text-gray-300">{cfg.confirmation_hours} hours</strong>. Pending subscribers can be sent a new link from the Subscribers page. The welcome email is sent once, after confirmation.
             </Check>
             <Check ok={cfg.dedicated_signing_secret} optional label="Dedicated link-signing secret">
               {cfg.dedicated_signing_secret ? "Confirmation and unsubscribe links use their own secret." : (
                 <>
-                  Links are signed with the app secret. Set <span className={code}>NEWSLETTER_CONFIRMATION_SECRET</span> to separate them.
+                  Set <span className={code}>NEWSLETTER_CONFIRMATION_SECRET</span> on the server so unsubscribe links have their own signing secret.
                 </>
               )}
             </Check>
@@ -135,8 +152,14 @@ export default function SettingsPanel() {
                 </>
               )}
             </Check>
-            <Check ok label="Site URL used in emails">
+            <Check ok label="Website URL">
               <span className={code}>{cfg.app_base_url}</span> — confirmation, unsubscribe and case-study links point here.
+            </Check>
+            <Check ok label="Backend API URL">
+              <span className={code}>{cfg.api_base_url}</span> — used for one-click unsubscribe, uploaded images and the webhook.
+            </Check>
+            <Check ok={cfg.pending_sync === 0} label="Contact synchronisation">
+              {cfg.pending_sync === 0 ? "Resend has every confirmation and unsubscribe." : `${cfg.pending_sync} subscriber change${cfg.pending_sync === 1 ? "" : "s"} waiting — use “Sync now” below.`}
             </Check>
           </ul>
         )}

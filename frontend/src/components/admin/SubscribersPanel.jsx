@@ -3,7 +3,7 @@ import { Ban, Download, MailCheck, RefreshCw, Search, UserMinus, Users } from "l
 import { adminDownload, adminError, adminGet, adminPatch, adminPost } from "../../lib/adminApi";
 import { useToast } from "../../hooks/useToast";
 import { formatDate } from "./helpers";
-import { Button, ConfirmDialog, Dialog, EmptyState, KpiCard, Pagination, Panel, Select, SkeletonRows, StatusBadge, TextInput } from "./ui";
+import { Badge, Button, ConfirmDialog, Dialog, EmptyState, KpiCard, Pagination, Panel, Select, SkeletonRows, StatusBadge, TextInput } from "./ui";
 
 const PAGE_SIZE = 20;
 
@@ -14,6 +14,14 @@ function Row({ label, children }) {
       <span className="min-w-0 break-words text-right font-medium text-gray-200">{children}</span>
     </div>
   );
+}
+
+/** Whether Resend's copy of this contact matches ours. Only confirmed contacts are ever sent to Resend. */
+function SyncState({ subscriber: s }) {
+  if (s.resend_sync_pending) return <Badge tone="amber">Sync pending</Badge>;
+  if (s.in_resend) return <Badge tone="emerald">Synced</Badge>;
+  if (s.status === "active") return <Badge tone="amber">Not synced</Badge>;
+  return <span className="text-gray-600" title="Only confirmed subscribers are sent to Resend">Not in Resend</span>;
 }
 
 export default function SubscribersPanel() {
@@ -93,6 +101,7 @@ export default function SubscribersPanel() {
     try {
       const result = await adminPost("/admin/newsletter/subscribers/sync");
       toast(result.remaining ? `Synced ${result.synced}; ${result.remaining} still pending — run it again.` : `Resend is up to date (${result.synced} synced).`, result.remaining ? "info" : "success");
+      load();
     } catch (err) {
       toast(adminError(err, "Sync failed."), "error");
     } finally {
@@ -110,11 +119,12 @@ export default function SubscribersPanel() {
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <KpiCard loading={!counts} label="Total" value={counts?.total.toLocaleString()} icon={Users} />
-        <KpiCard loading={!counts} label="Active" value={counts?.active.toLocaleString()} icon={MailCheck} accent="text-emerald-400" />
-        <KpiCard loading={!counts} label="Pending" value={counts?.pending.toLocaleString()} icon={RefreshCw} accent="text-amber-400" />
-        <KpiCard loading={!counts} label="Unsubscribed" value={counts ? (counts.unsubscribed + counts.suppressed).toLocaleString() : ""} icon={UserMinus} accent="text-rose-400" />
+        <KpiCard loading={!counts} label="Active" value={counts?.active.toLocaleString()} hint="Receive campaigns" icon={MailCheck} accent="text-emerald-400" />
+        <KpiCard loading={!counts} label="Pending" value={counts?.pending.toLocaleString()} hint="Not confirmed yet" icon={RefreshCw} accent="text-amber-400" />
+        <KpiCard loading={!counts} label="Unsubscribed" value={counts?.unsubscribed.toLocaleString()} icon={UserMinus} accent="text-gray-400" />
+        <KpiCard loading={!counts} label="Suppressed" value={counts?.suppressed.toLocaleString()} hint="Never emailed again" icon={Ban} accent="text-rose-400" />
       </div>
 
       <Panel
@@ -166,7 +176,7 @@ export default function SubscribersPanel() {
           </EmptyState>
         ) : (
           <div className={`overflow-x-auto transition-opacity ${loading ? "opacity-50" : ""}`}>
-            <table className="w-full min-w-[900px] border-collapse text-left text-xs text-gray-300">
+            <table className="w-full min-w-[1020px] border-collapse text-left text-xs text-gray-300">
               <thead className="border-b border-white/10 bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-gray-400">
                 <tr>
                   <th className="px-5 py-3">Email</th>
@@ -176,6 +186,7 @@ export default function SubscribersPanel() {
                   <th className="px-5 py-3">Signed up</th>
                   <th className="px-5 py-3">Confirmed</th>
                   <th className="px-5 py-3">Unsubscribed</th>
+                  <th className="px-5 py-3">Resend</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -199,6 +210,9 @@ export default function SubscribersPanel() {
                       ) : (
                         "—"
                       )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <SyncState subscriber={s} />
                     </td>
                   </tr>
                 ))}
@@ -249,7 +263,9 @@ export default function SubscribersPanel() {
               <Row label="Confirmed">{formatDate(detail.confirmed_at, true)}</Row>
               <Row label="Welcome email">{formatDate(detail.welcome_sent_at, true)}</Row>
               <Row label="Last unsubscribed">{detail.unsubscribed_at ? `${formatDate(detail.unsubscribed_at, true)} (${detail.unsubscribe_source || "unknown"})` : "—"}</Row>
-              <Row label="In Resend audience">{detail.in_resend ? (detail.resend_sync_pending ? "Yes — sync pending" : "Yes") : "No"}</Row>
+              <Row label="Resend sync">
+                <SyncState subscriber={detail} />
+              </Row>
             </div>
             <div>
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Recent campaign activity</p>
