@@ -3,6 +3,8 @@ Application settings loaded from environment variables.
 Never commit real secrets — use .env locally and platform secrets in production.
 """
 
+import logging
+import os
 from functools import lru_cache
 from typing import List
 
@@ -77,6 +79,61 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_FROM: str = ""
 
+    # --- Newsletter & case studies -------------------------------------------------
+    # Public site URL used for links inside emails (confirm, unsubscribe, case studies).
+    APP_BASE_URL: str = "https://www.meetchetanpura.in"
+    # Public URL of this API, used for uploaded-image URLs. Empty = derive from the request.
+    API_BASE_URL: str = ""
+    # Display name on newsletter emails (confirmation, welcome, campaigns).
+    NEWSLETTER_FROM_NAME: str = "Meet Chetanpura"
+    # Resend Segment that receives campaigns (Resend dashboard -> Audience -> Segments).
+    RESEND_NEWSLETTER_SEGMENT_ID: str = ""
+    # Signing secret of the Resend webhook (starts with "whsec_").
+    RESEND_WEBHOOK_SECRET: str = ""
+    # Signs unsubscribe links. Falls back to the JWT secret when empty.
+    NEWSLETTER_CONFIRMATION_SECRET: str = ""
+    NEWSLETTER_CONFIRMATION_HOURS: int = 48
+    # true = confirmation email before a subscriber becomes active (recommended).
+    NEWSLETTER_DOUBLE_OPT_IN: bool = True
+    # Optional postal address shown in the footer of newsletter emails
+    # (required by some anti-spam laws, e.g. CAN-SPAM for US recipients).
+    NEWSLETTER_POSTAL_ADDRESS: str = ""
+
+    # --- Environment & signing secrets -----------------------------------------------
+    # "production" | "development" | "test". Empty = auto: production on Render
+    # (Render sets RENDER=true on every service), development elsewhere.
+    APP_ENV: str = ""
+    # Signs admin login tokens (JWT). Required in production; must be independent of
+    # every other credential. Never derived from DATABASE_URL.
+    JWT_SECRET: str = ""
+
+    @property
+    def environment(self) -> str:
+        explicit = self.APP_ENV.strip().lower()
+        if explicit:
+            return explicit
+        return "production" if os.getenv("RENDER", "").strip().lower() == "true" else "development"
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
+    def jwt_secret(self) -> str:
+        return resolve_secrets(self)[0]
+
+    @property
+    def newsletter_secret(self) -> str:
+        return resolve_secrets(self)[1]
+
+    @property
+    def app_base_url(self) -> str:
+        return self.APP_BASE_URL.strip().rstrip("/") or "https://www.meetchetanpura.in"
+
+    @property
+    def newsletter_segment_id(self) -> str:
+        return self.RESEND_NEWSLETTER_SEGMENT_ID.strip()
+
     @property
     def resend_enabled(self) -> bool:
         return self.RESEND_API_KEY.strip().startswith("re_")
@@ -131,3 +188,72 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+# --- Signing secrets ---------------------------------------------------------------
+class SecretConfigError(RuntimeError):
+    """Raised at startup when production signing secrets are missing or unsafe."""
+
+
+# Used ONLY outside production (local development / tests), and labelled as such so they
+# are never mistaken for real secrets. Production refuses to start without real ones.
+DEV_JWT_SECRET = "dev-only-insecure-jwt-secret--never-use-in-production"
+DEV_NEWSLETTER_SECRET = "dev-only-insecure-newsletter-secret--never-use-in-production"
+MIN_SECRET_LENGTH = 32
+
+_logger = logging.getLogger(__name__)
+_warned_dev_secrets = False
+
+
+def production_secret_problems(settings: "Settings") -> list[str]:
+    """Every reason the configured secrets are not acceptable for production (no values echoed)."""
+    jwt_secret = settings.JWT_SECRET.strip()
+    newsletter_secret = settings.NEWSLETTER_CONFIRMATION_SECRET.strip()
+    database_url = settings.DATABASE_URL or ""
+    problems: list[str] = []
+    for name, value in (("JWT_SECRET", jwt_secret), ("NEWSLETTER_CONFIRMATION_SECRET", newsletter_secret)):
+        if not value:
+            problems.append(f"{name} is not set.")
+        elif value in (DEV_JWT_SECRET, DEV_NEWSLETTER_SECRET):
+            problems.append(f"{name} is a development placeholder.")
+        elif value in database_url:
+            problems.append(f"{name} must not be part of DATABASE_URL (use an independent random value).")
+    if jwt_secret and jwt_secret == newsletter_secret:
+        problems.append("JWT_SECRET and NEWSLETTER_CONFIRMATION_SECRET must be different values.")
+    return problems
+
+
+def resolve_secrets(settings: "Settings") -> tuple[str, str]:
+    """
+    (jwt_secret, newsletter_secret).
+
+    Production: both must be explicitly configured, independent of each other and of the
+    database credentials — otherwise SecretConfigError stops the app from starting.
+    Development / test: missing values fall back to the labelled DEV_* placeholders.
+    Nothing is ever derived from DATABASE_URL.
+    """
+    global _warned_dev_secrets
+    jwt_secret = settings.JWT_SECRET.strip()
+    newsletter_secret = settings.NEWSLETTER_CONFIRMATION_SECRET.strip()
+
+    if settings.is_production:
+        problems = production_secret_problems(settings)
+        if problems:
+            raise SecretConfigError(
+                "Refusing to start in production: " + " ".join(problems)
+                + " Set them in the Render dashboard (Environment). Generate each with: "
+                "python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+            )
+        if not _warned_dev_secrets:  # reused as a "logged once" flag
+            _warned_dev_secrets = True
+            for name, value in (("JWT_SECRET", jwt_secret), ("NEWSLETTER_CONFIRMATION_SECRET", newsletter_secret)):
+                if len(value) < MIN_SECRET_LENGTH:
+                    _logger.warning("%s is shorter than %s characters; consider a longer random value.",
+                                    name, MIN_SECRET_LENGTH)
+        return jwt_secret, newsletter_secret
+
+    if (not jwt_secret or not newsletter_secret) and not _warned_dev_secrets:
+        _warned_dev_secrets = True
+        _logger.warning("Using development-only signing secrets (APP_ENV=%s). Never deploy like this.",
+                        settings.environment)
+    return jwt_secret or DEV_JWT_SECRET, newsletter_secret or DEV_NEWSLETTER_SECRET

@@ -38,3 +38,17 @@ services:
         sync: false
       - key: ADMIN_API_KEY
         sync: false
+      # Security: set explicitly (long random strings). Never commit the values.
+      - key: JWT_SECRET
+        sync: false
+      - key: NEWSLETTER_CONFIRMATION_SECRET
+        sync: false
+      # Newsletter platform
+      - key: APP_BASE_URL
+        sync: false
+      - key: API_BASE_URL
+        sync: false
+      - key: RESEND_NEWSLETTER_SEGMENT_ID
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false

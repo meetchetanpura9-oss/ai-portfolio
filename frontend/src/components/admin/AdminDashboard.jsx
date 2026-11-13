@@ -20,6 +20,26 @@ import {
 } from "react-icons/hi";
 import { api } from "../../lib/api";
 import { useToast } from "../../hooks/useToast";
+import OverviewPanel from "./OverviewPanel";
+import SubscribersPanel from "./SubscribersPanel";
+import CampaignsPanel from "./CampaignsPanel";
+import CaseStudiesPanel from "./CaseStudiesPanel";
+import EmailAnalyticsPanel from "./EmailAnalyticsPanel";
+import SettingsPanel from "./SettingsPanel";
+
+const CONTACT_TABS = [
+  { id: "submissions", label: "Inquiries" },
+  { id: "analytics", label: "Site analytics" },
+];
+const NEWSLETTER_TABS = [
+  { id: "newsletter", label: "Newsletter" },
+  { id: "subscribers", label: "Subscribers" },
+  { id: "campaigns", label: "Campaigns" },
+  { id: "case-studies", label: "Case studies" },
+  { id: "email-analytics", label: "Email analytics" },
+  { id: "settings", label: "Settings" },
+];
+const ALL_TABS = [...CONTACT_TABS, ...NEWSLETTER_TABS].map((t) => t.id);
 
 // Custom Interactive SVG Donut Chart
 function DonutChart({ data, colors }) {
@@ -209,7 +229,18 @@ function TrafficTimeline({ views, visitors }) {
 
 export default function AdminDashboard() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("submissions"); // "submissions" or "analytics"
+  // The open tab lives in the URL hash so a refresh keeps it.
+  const [activeTab, setActiveTabState] = useState(() => {
+    const fromHash = window.location.hash.slice(1);
+    return ALL_TABS.includes(fromHash) ? fromHash : "submissions";
+  });
+  const setActiveTab = useCallback((tab) => {
+    setActiveTabState(tab);
+    window.history.replaceState(null, "", `/admin#${tab}`);
+  }, []);
+  const [openCampaignId, setOpenCampaignId] = useState(null);
+  const clearOpenCampaign = useCallback(() => setOpenCampaignId(null), []);
+  const isContactTab = CONTACT_TABS.some((t) => t.id === activeTab);
   const [contacts, setContacts] = useState([]);
   const [totalContacts, setTotalContacts] = useState(0);
   const [analytics, setAnalytics] = useState(null);
@@ -447,7 +478,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Analytics Highlights (HUD Cards) */}
-        {analytics && (
+        {analytics && isContactTab && (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/[0.01] p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(139,92,246,0.02)] transition-all hover:border-violet-500/20 group">
               <div className="flex items-center justify-between">
@@ -497,29 +528,29 @@ export default function AdminDashboard() {
 
         {/* Tab selection */}
         <div className="mt-8 flex border-b border-white/5 pb-4 justify-between items-center flex-wrap gap-4">
-          <div className="flex rounded-xl border border-white/5 bg-white/[0.01] p-1 backdrop-blur-xl">
-            <button
-              onClick={() => setActiveTab("submissions")}
-              className={`rounded-lg px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-all ${
-                activeTab === "submissions"
-                  ? "bg-gradient-to-r from-violet-600/70 to-fuchsia-600/50 text-white shadow-[0_0_12px_rgba(139,92,246,0.3)]"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Inquiries list
-            </button>
-            <button
-              onClick={() => setActiveTab("analytics")}
-              className={`rounded-lg px-4 py-2 text-xs font-extrabold uppercase tracking-wider transition-all ${
-                activeTab === "analytics"
-                  ? "bg-gradient-to-r from-fuchsia-600/60 to-cyan-600/60 text-white shadow-[0_0_12px_rgba(34,211,238,0.3)]"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Analytics Charts
-            </button>
-          </div>
+          <nav aria-label="Dashboard sections" className="flex max-w-full flex-wrap gap-1 rounded-xl border border-white/5 bg-white/[0.01] p-1 backdrop-blur-xl">
+            {[CONTACT_TABS, NEWSLETTER_TABS].map((group, gi) => (
+              <div key={gi} className={`flex flex-wrap gap-1 ${gi ? "border-white/10 sm:border-l sm:pl-1" : ""}`}>
+                {group.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    aria-current={activeTab === tab.id ? "page" : undefined}
+                    className={`rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase tracking-wider transition-all ${
+                      activeTab === tab.id
+                        ? "bg-gradient-to-r from-violet-600/70 to-fuchsia-600/50 text-white shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+                        : "text-gray-400 hover:text-gray-200"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
 
+          {isContactTab && (
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleTestEmail}
@@ -545,10 +576,28 @@ export default function AdminDashboard() {
               Excel (XLSX)
             </button>
           </div>
+          )}
         </div>
 
         {/* Dashboard Tabs Content */}
-        {loading ? (
+        {activeTab === "newsletter" ? (
+          <OverviewPanel onNavigate={setActiveTab} />
+        ) : activeTab === "subscribers" ? (
+          <SubscribersPanel />
+        ) : activeTab === "campaigns" ? (
+          <CampaignsPanel openCampaignId={openCampaignId} onOpened={clearOpenCampaign} />
+        ) : activeTab === "case-studies" ? (
+          <CaseStudiesPanel
+            onCreateNewsletter={(campaignId) => {
+              setOpenCampaignId(campaignId);
+              setActiveTab("campaigns");
+            }}
+          />
+        ) : activeTab === "email-analytics" ? (
+          <EmailAnalyticsPanel onNavigate={setActiveTab} />
+        ) : activeTab === "settings" ? (
+          <SettingsPanel />
+        ) : loading ? (
           <div className="mt-20 flex flex-col items-center justify-center gap-4">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500/30 border-t-violet-500" />
             <p className="text-xs font-mono text-gray-500 uppercase tracking-widest font-semibold">Querying SQL database…</p>

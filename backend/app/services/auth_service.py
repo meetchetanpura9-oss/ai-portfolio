@@ -14,16 +14,10 @@ from app.models.user_model import User
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-# Default fallback secret if not configured in environment
-JWT_SECRET = settings.DATABASE_URL.split("/")[-1] if len(settings.DATABASE_URL) > 10 else "portfolio-super-secret-key-2026"
-# If a specific JWT_SECRET is added to config, we will read it (we will add it to Config)
-try:
-    import os
-    env_secret = os.getenv("JWT_SECRET")
-    if env_secret:
-        JWT_SECRET = env_secret
-except Exception:
-    pass
+# JWT_SECRET must be configured explicitly in production (the app refuses to start
+# otherwise — see app.core.config.resolve_secrets). It is never derived from DATABASE_URL.
+# Outside production a clearly labelled development-only value is used.
+JWT_SECRET = settings.jwt_secret
 
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -88,5 +82,15 @@ def get_current_user(
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
-        
+
     return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Authorization (not just authentication): the signed-in user must have the admin role."""
+    if (current_user.role or "").lower() != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required",
+        )
+    return current_user

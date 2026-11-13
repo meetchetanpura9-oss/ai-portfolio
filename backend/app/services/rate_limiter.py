@@ -13,14 +13,17 @@ from app.core.config import get_settings
 
 
 class RateLimiter:
-    def __init__(self) -> None:
+    def __init__(self, max_requests: int | None = None, window_seconds: int | None = None) -> None:
+        # None = use RATE_LIMIT_REQUESTS / RATE_LIMIT_WINDOW_SECONDS from settings.
         self._hits: DefaultDict[str, List[float]] = defaultdict(list)
+        self._max_requests = max_requests
+        self._window_seconds = window_seconds
 
     def check(self, client_id: str) -> None:
         settings = get_settings()
         now = time()
-        window = settings.RATE_LIMIT_WINDOW_SECONDS
-        max_requests = settings.RATE_LIMIT_REQUESTS
+        window = self._window_seconds or settings.RATE_LIMIT_WINDOW_SECONDS
+        max_requests = self._max_requests or settings.RATE_LIMIT_REQUESTS
 
         self._hits[client_id] = [
             t for t in self._hits[client_id] if now - t < window

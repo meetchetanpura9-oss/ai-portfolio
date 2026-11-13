@@ -4,8 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import text
 
-from app.core.config import get_settings
-from app.routes.contact_routes import router as contact_router
+from app.core.config import get_settings, resolve_secrets
+
+# Fail fast, before anything else is imported: in production the app refuses to start
+# without independent JWT_SECRET and NEWSLETTER_CONFIRMATION_SECRET values.
+resolve_secrets(get_settings())
+
+from app.routes.contact_routes import router as contact_router  # noqa: E402
 from app.routes.project_routes import router as project_router
 from app.routes.metrics_routes import router as metrics_router
 from app.routes.playground_routes import router as playground_router
@@ -13,12 +18,24 @@ from app.routes.auth_routes import router as auth_router
 from app.routes.newsletter_routes import router as newsletter_router
 from app.routes.analytics_routes import router as analytics_router
 from app.routes.notification_routes import router as notification_router
+from app.routes.admin_newsletter_routes import router as admin_newsletter_router
+from app.routes.case_study_routes import admin_router as case_study_admin_router
+from app.routes.case_study_routes import public_router as case_study_public_router
+from app.routes.webhook_routes import router as webhook_router
 
 from app.database.connection import Base, engine, SessionLocal, DATABASE_URL, check_database
 from app.models.contact_model import Contact  # noqa: F401
 from app.models.project_model import Project  # noqa: F401
 from app.models.user_model import User  # noqa: F401
-from app.models.newsletter_model import NewsletterSubscriber  # noqa: F401
+from app.models.newsletter_model import (  # noqa: F401
+    CaseStudy,
+    MediaAsset,
+    NewsletterCampaign,
+    NewsletterEmailEvent,
+    NewsletterSubscriber,
+    NewsletterWebhookEvent,
+)
+from app.database.migrations import run_migrations
 from app.models.admin_log_model import AdminLog  # noqa: F401
 from app.models.analytics_model import Analytics  # noqa: F401
 from app.services.auth_service import hash_password
@@ -54,6 +71,8 @@ def init_database() -> bool:
                 conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS notification_error TEXT"))
                 conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS inquiry_type VARCHAR(50)"))
                 conn.commit()
+        # Additive column patches for tables that already exist (never drops anything).
+        run_migrations(engine)
     except Exception as e:
         DB_STATE.update(ready=False, error=f"Schema setup failed: {type(e).__name__}: {str(e)[:200]}")
         logging.exception("Database schema setup failed")
@@ -122,6 +141,10 @@ app.include_router(auth_router)
 app.include_router(newsletter_router)
 app.include_router(analytics_router)
 app.include_router(notification_router)
+app.include_router(admin_newsletter_router)
+app.include_router(case_study_admin_router)
+app.include_router(case_study_public_router)
+app.include_router(webhook_router)
 
 @app.get("/health")
 def health():
