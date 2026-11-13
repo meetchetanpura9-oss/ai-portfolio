@@ -13,4 +13,11 @@ export default defineConfig({
       },
     },
   },
+  // Component tests (npm test). They run in jsdom with every API module mocked.
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.js"],
+    css: false,
+    restoreMocks: true,
+  },
 })

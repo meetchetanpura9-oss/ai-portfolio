@@ -11,7 +11,7 @@ import {
   HiOutlineOfficeBuilding,
   HiOutlineGlobe,
   HiOutlineDatabase,
-  HiOutlineLogout,
+
   HiOutlineCheckCircle,
   HiOutlineExclamationCircle,
   HiOutlineClock,
@@ -26,20 +26,31 @@ import CampaignsPanel from "./CampaignsPanel";
 import CaseStudiesPanel from "./CaseStudiesPanel";
 import EmailAnalyticsPanel from "./EmailAnalyticsPanel";
 import SettingsPanel from "./SettingsPanel";
+import AdminSidebar from "./AdminSidebar";
+import { ALL_SECTIONS, CONTACT_ITEMS, isNewsletterSection } from "./sections";
 
-const CONTACT_TABS = [
-  { id: "submissions", label: "Inquiries" },
-  { id: "analytics", label: "Site analytics" },
-];
-const NEWSLETTER_TABS = [
-  { id: "newsletter", label: "Newsletter" },
-  { id: "subscribers", label: "Subscribers" },
-  { id: "campaigns", label: "Campaigns" },
-  { id: "case-studies", label: "Case studies" },
-  { id: "email-analytics", label: "Email analytics" },
-  { id: "settings", label: "Settings" },
-];
-const ALL_TABS = [...CONTACT_TABS, ...NEWSLETTER_TABS].map((t) => t.id);
+const CONTACT_TABS = CONTACT_ITEMS;
+const ALL_TABS = ALL_SECTIONS.map((t) => t.id);
+const tabFromHash = () => {
+  const fromHash = window.location.hash.slice(1);
+  return ALL_TABS.includes(fromHash) ? fromHash : "submissions";
+};
+/** Small per-browser UI preferences (never anything sensitive). */
+const readPref = (key, fallback) => {
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? fallback : value === "1";
+  } catch {
+    return fallback;
+  }
+};
+const writePref = (key, value) => {
+  try {
+    localStorage.setItem(key, value ? "1" : "0");
+  } catch {
+    /* storage unavailable: the preference just is not remembered */
+  }
+};
 
 // Custom Interactive SVG Donut Chart
 function DonutChart({ data, colors }) {
@@ -229,15 +240,33 @@ function TrafficTimeline({ views, visitors }) {
 
 export default function AdminDashboard() {
   const { toast } = useToast();
-  // The open tab lives in the URL hash so a refresh keeps it.
-  const [activeTab, setActiveTabState] = useState(() => {
-    const fromHash = window.location.hash.slice(1);
-    return ALL_TABS.includes(fromHash) ? fromHash : "submissions";
-  });
+  // The open section lives in the URL hash, so refresh, direct links and Back/Forward all work.
+  const [activeTab, setActiveTabState] = useState(tabFromHash);
   const setActiveTab = useCallback((tab) => {
     setActiveTabState(tab);
-    window.history.replaceState(null, "", `/admin#${tab}`);
+    if (window.location.hash.slice(1) !== tab) window.history.pushState(null, "", `/admin#${tab}`);
+    window.scrollTo({ top: 0 });
   }, []);
+  useEffect(() => {
+    const sync = () => setActiveTabState(tabFromHash());
+    window.addEventListener("popstate", sync);
+    window.addEventListener("hashchange", sync);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("hashchange", sync);
+    };
+  }, []);
+
+  // Sidebar state
+  const [collapsed, setCollapsed] = useState(() => readPref("adminSidebarCollapsed", false));
+  const [groupOpenPref, setGroupOpenPref] = useState(() => readPref("adminNewsletterNavOpen", true));
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+  const openMobileNav = useCallback(() => setMobileNavOpen(true), []);
+  const inNewsletter = isNewsletterSection(activeTab);
+  // The group cannot be collapsed around the page you are on.
+  const groupOpen = groupOpenPref || inNewsletter;
+  const section = ALL_SECTIONS.find((t) => t.id === activeTab);
   const [openCampaignId, setOpenCampaignId] = useState(null);
   const clearOpenCampaign = useCallback(() => setOpenCampaignId(null), []);
   const isContactTab = CONTACT_TABS.some((t) => t.id === activeTab);
@@ -446,35 +475,56 @@ export default function AdminDashboard() {
   const adminName = localStorage.getItem("adminName") || "Administrator";
 
   return (
-    <div className="min-h-screen bg-[#050814] font-sans text-white pb-16 pt-24 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050814] font-sans text-white relative overflow-x-clip">
       {/* Visual cyber mesh/glow background */}
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff01_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
       <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-violet-600/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-15%] w-[600px] h-[600px] bg-cyan-600/5 blur-[140px] rounded-full pointer-events-none" />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Header bar */}
-        <header className="flex flex-col gap-4 border-b border-white/5 pb-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.7)]" />
-              <h1 className="text-xl font-extrabold tracking-tight md:text-2xl font-display uppercase tracking-widest bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
-                Control Console
-              </h1>
-            </div>
-            <p className="mt-1.5 text-xs text-gray-500 font-semibold font-mono">
-              SECURE SQL ENVIRONMENT // WELCOME: <span className="text-cyan-300 uppercase">{adminName}</span>
+      <AdminSidebar
+        active={activeTab}
+        onSelect={setActiveTab}
+        collapsed={collapsed}
+        onToggleCollapsed={() =>
+          setCollapsed((value) => {
+            writePref("adminSidebarCollapsed", !value);
+            return !value;
+          })
+        }
+        groupOpen={groupOpen}
+        onToggleGroup={() => {
+          writePref("adminNewsletterNavOpen", !groupOpen);
+          setGroupOpenPref(!groupOpen);
+        }}
+        mobileOpen={mobileNavOpen}
+        onMobileOpen={openMobileNav}
+        onMobileClose={closeMobileNav}
+        adminName={adminName}
+        onLogout={handleLogout}
+      />
+
+      <div className={`relative z-10 transition-[padding] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-64"}`}>
+      <main className="mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 lg:px-8 lg:pt-8">
+
+        {/* Section header */}
+        <header className="flex flex-col gap-4 border-b border-white/5 pb-6 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-widest text-gray-500">
+              Control Console <span aria-hidden>/</span> <span className={inNewsletter ? "text-violet-300" : "text-cyan-300"}>{inNewsletter ? "Newsletter" : "Site"}</span>
             </p>
+            <h1 className="mt-1.5 font-display text-xl font-extrabold tracking-tight text-white md:text-2xl">{section?.label}</h1>
+            <p className="mt-1 text-xs text-gray-500">{section?.description}</p>
           </div>
-          
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-gray-300 transition-all hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-300"
-          >
-            <HiOutlineLogout className="text-base" />
-            Logout
-          </button>
+          {inNewsletter && activeTab !== "create-newsletter" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("create-newsletter")}
+              className="inline-flex w-max items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-600/80 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-600"
+            >
+              <HiOutlineMail className="text-base" />
+              Create newsletter
+            </button>
+          )}
         </header>
 
         {/* Analytics Highlights (HUD Cards) */}
@@ -526,31 +576,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Tab selection */}
-        <div className="mt-8 flex border-b border-white/5 pb-4 justify-between items-center flex-wrap gap-4">
-          <nav aria-label="Dashboard sections" className="flex max-w-full flex-wrap gap-1 rounded-xl border border-white/5 bg-white/[0.01] p-1 backdrop-blur-xl">
-            {[CONTACT_TABS, NEWSLETTER_TABS].map((group, gi) => (
-              <div key={gi} className={`flex flex-wrap gap-1 ${gi ? "border-white/10 sm:border-l sm:pl-1" : ""}`}>
-                {group.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    aria-current={activeTab === tab.id ? "page" : undefined}
-                    className={`rounded-lg px-3.5 py-2 text-xs font-extrabold uppercase tracking-wider transition-all ${
-                      activeTab === tab.id
-                        ? "bg-gradient-to-r from-violet-600/70 to-fuchsia-600/50 text-white shadow-[0_0_12px_rgba(139,92,246,0.3)]"
-                        : "text-gray-400 hover:text-gray-200"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </nav>
-
-          {isContactTab && (
+        {/* Inquiry tools */}
+        {isContactTab && (
+        <div className="mt-8 flex border-b border-white/5 pb-4 justify-end items-center flex-wrap gap-4">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleTestEmail}
@@ -576,16 +604,24 @@ export default function AdminDashboard() {
               Excel (XLSX)
             </button>
           </div>
-          )}
         </div>
+        )}
 
-        {/* Dashboard Tabs Content */}
+        {/* Section content */}
         {activeTab === "newsletter" ? (
           <OverviewPanel onNavigate={setActiveTab} />
         ) : activeTab === "subscribers" ? (
           <SubscribersPanel />
-        ) : activeTab === "campaigns" ? (
-          <CampaignsPanel openCampaignId={openCampaignId} onOpened={clearOpenCampaign} />
+        ) : activeTab === "campaigns" || activeTab === "create-newsletter" ? (
+          // "Create Newsletter" is the campaign list with the editor already open on a blank draft.
+          <CampaignsPanel
+            key={activeTab}
+            createNew={activeTab === "create-newsletter"}
+            onEditorClosed={() => activeTab === "create-newsletter" && setActiveTab("campaigns")}
+            onNavigate={setActiveTab}
+            openCampaignId={openCampaignId}
+            onOpened={clearOpenCampaign}
+          />
         ) : activeTab === "case-studies" ? (
           <CaseStudiesPanel
             onCreateNewsletter={(campaignId) => {
@@ -835,6 +871,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+      </main>
       </div>
     </div>
   );
