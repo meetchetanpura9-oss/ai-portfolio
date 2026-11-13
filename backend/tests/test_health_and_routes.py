@@ -174,9 +174,10 @@ def test_contact_and_contact_management(client):
 
 
 def test_newsletter(client):
-    r = client.post("/newsletter/subscribe", json={"email": "reader@example.org"})
+    # Marketing consent is now mandatory (see tests/test_newsletter_platform.py for the full flow).
+    r = client.post("/newsletter/subscribe", json={"email": "reader@example.org", "consent": True})
     assert r.status_code == 201, r.text
-    dup = client.post("/newsletter/subscribe", json={"email": "reader@example.org"})
+    dup = client.post("/newsletter/subscribe", json={"email": "reader@example.org", "consent": True})
     assert dup.status_code in (200, 201, 400, 409)
 
 

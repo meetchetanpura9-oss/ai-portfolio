@@ -16,6 +16,17 @@ import Footer from "./components/Footer";
 // Admin screens are code-split so public visitors never download them.
 const AdminLogin = lazy(() => import("./components/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard"));
+// Secondary public pages, also split out of the main bundle.
+const NewsletterConfirm = lazy(() => import("./components/newsletter/NewsletterConfirm"));
+const NewsletterUnsubscribe = lazy(() => import("./components/newsletter/NewsletterUnsubscribe"));
+const CaseStudiesIndex = lazy(() => import("./components/caseStudies/CaseStudiesIndex"));
+const CaseStudyDetail = lazy(() => import("./components/caseStudies/CaseStudyDetail"));
+
+const PageFallback = (
+  <div className="flex min-h-screen items-center justify-center bg-bg">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-blue/30 border-t-brand-blue" />
+  </div>
+);
 
 const AdminFallback = (
   <div className="flex min-h-screen items-center justify-center bg-[#050816] text-white">
@@ -52,8 +63,8 @@ function App() {
     // Wake the API (Render free plan sleeps) so forms respond quickly later.
     wakeApi();
 
-    // Only track visitors on the public portfolio
-    if (route === "/login" || route === "/admin") return;
+    // Only track visitors on the public portfolio (not admin or email-link pages)
+    if (route === "/login" || route === "/admin" || route.startsWith("/newsletter/")) return;
 
     const trackVisitor = async () => {
       // Basic session-level throttle to avoid double-pings on the same session load
@@ -116,6 +127,22 @@ function App() {
       <Suspense fallback={AdminFallback}>
         <AdminDashboard />
       </Suspense>
+    );
+  }
+
+  const path = route.replace(/\/+$/, "") || "/";
+  const caseStudySlug = path.match(/^\/case-studies\/([^/]+)$/)?.[1];
+  const page =
+    path === "/newsletter/confirm" ? <NewsletterConfirm /> :
+    path === "/newsletter/unsubscribe" ? <NewsletterUnsubscribe /> :
+    path === "/case-studies" ? <CaseStudiesIndex /> :
+    caseStudySlug ? <CaseStudyDetail key={caseStudySlug} slug={decodeURIComponent(caseStudySlug)} /> :
+    null;
+  if (page) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <Suspense fallback={PageFallback}>{page}</Suspense>
+      </MotionConfig>
     );
   }
 

@@ -14,16 +14,24 @@ from app.models.user_model import User
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-# Default fallback secret if not configured in environment
-JWT_SECRET = settings.DATABASE_URL.split("/")[-1] if len(settings.DATABASE_URL) > 10 else "portfolio-super-secret-key-2026"
-# If a specific JWT_SECRET is added to config, we will read it (we will add it to Config)
-try:
+def _resolve_jwt_secret() -> str:
+    """
+    JWT_SECRET from the environment; otherwise a value derived from the *full* DATABASE_URL
+    (which contains the database password), so it is stable across restarts but not guessable.
+    The previous fallback used only the database name (e.g. "neondb?sslmode=require"),
+    which anyone could guess and use to forge admin tokens.
+    """
+    import hashlib
     import os
-    env_secret = os.getenv("JWT_SECRET")
+
+    env_secret = (os.getenv("JWT_SECRET") or "").strip()
     if env_secret:
-        JWT_SECRET = env_secret
-except Exception:
-    pass
+        return env_secret
+    logger.warning("JWT_SECRET is not set; deriving one from DATABASE_URL. Set JWT_SECRET explicitly.")
+    return hashlib.sha256(f"ai-portfolio-jwt:{settings.DATABASE_URL}".encode("utf-8")).hexdigest()
+
+
+JWT_SECRET = _resolve_jwt_secret()
 
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -88,5 +96,15 @@ def get_current_user(
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
-        
+
     return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Authorization (not just authentication): the signed-in user must have the admin role."""
+    if (current_user.role or "").lower() != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required",
+        )
+    return current_user

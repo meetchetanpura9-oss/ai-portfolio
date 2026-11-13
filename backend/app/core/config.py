@@ -77,6 +77,34 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_FROM: str = ""
 
+    # --- Newsletter & case studies -------------------------------------------------
+    # Public site URL used for links inside emails (confirm, unsubscribe, case studies).
+    APP_BASE_URL: str = "https://www.meetchetanpura.in"
+    # Public URL of this API, used for uploaded-image URLs. Empty = derive from the request.
+    API_BASE_URL: str = ""
+    # Display name on newsletter emails (confirmation, welcome, campaigns).
+    NEWSLETTER_FROM_NAME: str = "Meet Chetanpura"
+    # Resend Segment that receives campaigns (Resend dashboard -> Audience -> Segments).
+    RESEND_NEWSLETTER_SEGMENT_ID: str = ""
+    # Signing secret of the Resend webhook (starts with "whsec_").
+    RESEND_WEBHOOK_SECRET: str = ""
+    # Signs unsubscribe links. Falls back to the JWT secret when empty.
+    NEWSLETTER_CONFIRMATION_SECRET: str = ""
+    NEWSLETTER_CONFIRMATION_HOURS: int = 48
+    # true = confirmation email before a subscriber becomes active (recommended).
+    NEWSLETTER_DOUBLE_OPT_IN: bool = True
+    # Optional postal address shown in the footer of newsletter emails
+    # (required by some anti-spam laws, e.g. CAN-SPAM for US recipients).
+    NEWSLETTER_POSTAL_ADDRESS: str = ""
+
+    @property
+    def app_base_url(self) -> str:
+        return self.APP_BASE_URL.strip().rstrip("/") or "https://www.meetchetanpura.in"
+
+    @property
+    def newsletter_segment_id(self) -> str:
+        return self.RESEND_NEWSLETTER_SEGMENT_ID.strip()
+
     @property
     def resend_enabled(self) -> bool:
         return self.RESEND_API_KEY.strip().startswith("re_")
