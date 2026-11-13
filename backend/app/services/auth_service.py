@@ -14,24 +14,10 @@ from app.models.user_model import User
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-def _resolve_jwt_secret() -> str:
-    """
-    JWT_SECRET from the environment; otherwise a value derived from the *full* DATABASE_URL
-    (which contains the database password), so it is stable across restarts but not guessable.
-    The previous fallback used only the database name (e.g. "neondb?sslmode=require"),
-    which anyone could guess and use to forge admin tokens.
-    """
-    import hashlib
-    import os
-
-    env_secret = (os.getenv("JWT_SECRET") or "").strip()
-    if env_secret:
-        return env_secret
-    logger.warning("JWT_SECRET is not set; deriving one from DATABASE_URL. Set JWT_SECRET explicitly.")
-    return hashlib.sha256(f"ai-portfolio-jwt:{settings.DATABASE_URL}".encode("utf-8")).hexdigest()
-
-
-JWT_SECRET = _resolve_jwt_secret()
+# JWT_SECRET must be configured explicitly in production (the app refuses to start
+# otherwise — see app.core.config.resolve_secrets). It is never derived from DATABASE_URL.
+# Outside production a clearly labelled development-only value is used.
+JWT_SECRET = settings.jwt_secret
 
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")

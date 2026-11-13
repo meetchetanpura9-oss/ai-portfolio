@@ -51,11 +51,8 @@ def mask_email(email: str) -> str:
 
 # --- Tokens ------------------------------------------------------------------------
 def _secret(settings: Settings) -> bytes:
-    secret = settings.NEWSLETTER_CONFIRMATION_SECRET.strip()
-    if not secret:
-        from app.services.auth_service import JWT_SECRET
-        secret = JWT_SECRET
-    return secret.encode("utf-8")
+    # Independent of JWT_SECRET; required in production (see config.resolve_secrets).
+    return settings.newsletter_secret.encode("utf-8")
 
 
 def hash_token(token: str) -> str:

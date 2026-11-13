@@ -885,21 +885,7 @@ def test_settings_endpoint_never_returns_secrets(client, resend, admin):  # noqa
 
 
 # --- Security regressions -------------------------------------------------------------
-def test_jwt_secret_fallback_is_not_the_database_name(monkeypatch):
-    """The old fallback was DATABASE_URL.split('/')[-1] (e.g. 'neondb?sslmode=require')."""
-    from app.services import auth_service
-
-    monkeypatch.delenv("JWT_SECRET", raising=False)
-    secret = auth_service._resolve_jwt_secret()
-    db_url = get_settings().DATABASE_URL
-    assert secret != db_url.split("/")[-1]
-    assert db_url not in secret and len(secret) >= 32
-    assert secret == auth_service._resolve_jwt_secret()  # stable across restarts
-
-    monkeypatch.setenv("JWT_SECRET", "explicit-secret-value")
-    assert auth_service._resolve_jwt_secret() == "explicit-secret-value"
-
-
+# (Production-secret enforcement is covered in tests/test_production_secrets.py.)
 def test_unsubscribe_can_defer_commit_to_caller():
     db = SessionLocal()
     try:

@@ -14,6 +14,10 @@ _TMP_DB = os.path.join(tempfile.mkdtemp(), "test.db")
 # Must be set before the app is imported (settings are cached at import time).
 os.environ.update(
     DATABASE_URL=f"sqlite:///{_TMP_DB}",
+    # Explicit test-only secrets (production refuses to start without real ones).
+    APP_ENV="test",
+    JWT_SECRET="test-only-jwt-secret-0123456789abcdef",
+    NEWSLETTER_CONFIRMATION_SECRET="test-only-newsletter-secret-0123456789abcdef",
     ADMIN_EMAIL="admin-test@example.org",
     ADMIN_NAME="Test Admin",
     ADMIN_PASSWORD="test-admin-password-123",

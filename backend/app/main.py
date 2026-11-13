@@ -4,8 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import text
 
-from app.core.config import get_settings
-from app.routes.contact_routes import router as contact_router
+from app.core.config import get_settings, resolve_secrets
+
+# Fail fast, before anything else is imported: in production the app refuses to start
+# without independent JWT_SECRET and NEWSLETTER_CONFIRMATION_SECRET values.
+resolve_secrets(get_settings())
+
+from app.routes.contact_routes import router as contact_router  # noqa: E402
 from app.routes.project_routes import router as project_router
 from app.routes.metrics_routes import router as metrics_router
 from app.routes.playground_routes import router as playground_router

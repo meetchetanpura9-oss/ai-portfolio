@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend tests (Python 3.12, PostgreSQL 16)
+    name: Backend tests (Python 3.12.10, PostgreSQL 16)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -46,9 +46,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.10"  # keep in sync with .python-version, Dockerfile and Render PYTHON_VERSION
           cache: pip
           cache-dependency-path: backend/requirements.txt
+      - name: Check Python matches the pinned runtime (.python-version / Render)
+        run: |
+          expected="$(tr -d '[:space:]' < ../.python-version)"
+          actual="$(python -c 'import platform; print(platform.python_version())')"
+          echo "expected=$expected actual=$actual"
+          test "$expected" = "$actual"
+          test "$expected" = "$(tr -d '[:space:]' < .python-version)"
+          grep -q "^FROM python:${expected}-slim" Dockerfile
       - name: Install dependencies (incl. psycopg[binary] PostgreSQL driver)
         run: |
           python -m pip install --upgrade pip
