@@ -100,8 +100,9 @@ class Settings(BaseSettings):
     NEWSLETTER_POSTAL_ADDRESS: str = ""
 
     # --- Environment & signing secrets -----------------------------------------------
-    # "production" | "development" | "test". Empty = auto: production on Render
-    # (Render sets RENDER=true on every service), development elsewhere.
+    # "production" | "development" | "test". Only used when NOT on Render: Render sets
+    # RENDER=true on every service, and that always means production (APP_ENV cannot
+    # downgrade it). Empty = development.
     APP_ENV: str = ""
     # Signs admin login tokens (JWT). Required in production; must be independent of
     # every other credential. Never derived from DATABASE_URL.
@@ -109,10 +110,12 @@ class Settings(BaseSettings):
 
     @property
     def environment(self) -> str:
-        explicit = self.APP_ENV.strip().lower()
-        if explicit:
-            return explicit
-        return "production" if os.getenv("RENDER", "").strip().lower() == "true" else "development"
+        # Checked first: on Render this is always production, even if APP_ENV was
+        # accidentally set to development/test (which would otherwise disable the
+        # production secret checks).
+        if os.getenv("RENDER", "").strip().lower() == "true":
+            return "production"
+        return self.APP_ENV.strip().lower() or "development"
 
     @property
     def is_production(self) -> bool:
@@ -218,6 +221,9 @@ def production_secret_problems(settings: "Settings") -> list[str]:
             problems.append(f"{name} is a development placeholder.")
         elif value in database_url:
             problems.append(f"{name} must not be part of DATABASE_URL (use an independent random value).")
+        elif len(value) < MIN_SECRET_LENGTH:
+            # Only the length requirement is reported — never the value or its length.
+            problems.append(f"{name} must be at least {MIN_SECRET_LENGTH} characters long.")
     if jwt_secret and jwt_secret == newsletter_secret:
         problems.append("JWT_SECRET and NEWSLETTER_CONFIRMATION_SECRET must be different values.")
     return problems
@@ -244,12 +250,6 @@ def resolve_secrets(settings: "Settings") -> tuple[str, str]:
                 + " Set them in the Render dashboard (Environment). Generate each with: "
                 "python -c \"import secrets; print(secrets.token_urlsafe(48))\""
             )
-        if not _warned_dev_secrets:  # reused as a "logged once" flag
-            _warned_dev_secrets = True
-            for name, value in (("JWT_SECRET", jwt_secret), ("NEWSLETTER_CONFIRMATION_SECRET", newsletter_secret)):
-                if len(value) < MIN_SECRET_LENGTH:
-                    _logger.warning("%s is shorter than %s characters; consider a longer random value.",
-                                    name, MIN_SECRET_LENGTH)
         return jwt_secret, newsletter_secret
 
     if (not jwt_secret or not newsletter_secret) and not _warned_dev_secrets:

@@ -101,9 +101,69 @@ def test_render_is_detected_as_production(monkeypatch):
         resolve_secrets(settings)
 
 
-def test_explicit_app_env_overrides_render_detection(monkeypatch):
-    assert not make(monkeypatch, app_env="development", render="true").is_production
-    assert make(monkeypatch, app_env="", render=None).environment == "development"
+@pytest.mark.parametrize("app_env", ["development", "test", "DEVELOPMENT", " test ", "staging", "production", ""])
+def test_render_always_means_production_whatever_app_env_says(monkeypatch, app_env):
+    settings = make(monkeypatch, app_env=app_env, render="true")
+    assert settings.environment == "production" and settings.is_production
+    # An accidental APP_ENV=development on Render must not bypass the secret checks.
+    with pytest.raises(SecretConfigError, match="JWT_SECRET is not set"):
+        resolve_secrets(settings)
+
+
+@pytest.mark.parametrize("render", ["TRUE", " true "])
+def test_render_flag_is_case_and_whitespace_insensitive(monkeypatch, render):
+    assert make(monkeypatch, app_env="development", render=render).is_production
+
+
+@pytest.mark.parametrize("app_env,expected", [
+    ("development", "development"), ("test", "test"), ("production", "production"), ("", "development"),
+])
+def test_app_env_is_used_when_not_on_render(monkeypatch, app_env, expected):
+    assert make(monkeypatch, app_env=app_env, render=None).environment == expected
+
+
+@pytest.mark.parametrize("render", ["false", "", "0"])
+def test_render_other_than_true_does_not_force_production(monkeypatch, render):
+    assert make(monkeypatch, app_env="development", render=render).environment == "development"
+
+
+# --- Secret strength -----------------------------------------------------------------
+SHORT = "x" * 31  # MIN_SECRET_LENGTH - 1
+
+
+@pytest.mark.parametrize("which", ["JWT_SECRET", "NEWSLETTER_CONFIRMATION_SECRET"])
+def test_production_rejects_short_secrets(monkeypatch, which):
+    jwt, nl = (SHORT, GOOD_NL) if which == "JWT_SECRET" else (GOOD_JWT, SHORT)
+    with pytest.raises(SecretConfigError) as exc:
+        resolve_secrets(make(monkeypatch, jwt=jwt, newsletter=nl))
+    message = str(exc.value)
+    assert f"{which} must be at least 32 characters long." in message
+    assert SHORT not in message and GOOD_JWT not in message and GOOD_NL not in message
+    assert "31" not in message  # not even the actual length is disclosed
+
+
+def test_production_reports_both_short_secrets(monkeypatch):
+    with pytest.raises(SecretConfigError) as exc:
+        resolve_secrets(make(monkeypatch, jwt="a" * 10, newsletter="b" * 20))
+    assert str(exc.value).count("must be at least 32 characters long") == 2
+
+
+def test_production_accepts_exactly_32_character_secrets(monkeypatch):
+    jwt, nl = "J" * 32, "N" * 32
+    assert resolve_secrets(make(monkeypatch, jwt=jwt, newsletter=nl)) == (jwt, nl)
+
+
+def test_short_secret_rejection_logs_nothing_secret(monkeypatch, caplog):
+    caplog.set_level("DEBUG")
+    with pytest.raises(SecretConfigError):
+        resolve_secrets(make(monkeypatch, jwt=SHORT, newsletter=GOOD_NL))
+    assert SHORT not in caplog.text and GOOD_NL not in caplog.text
+
+
+def test_development_does_not_enforce_length(monkeypatch):
+    # Local/CI convenience: short explicit dev values still work outside production.
+    assert resolve_secrets(make(monkeypatch, app_env="development", jwt="short", newsletter="also-short")) \
+        == ("short", "also-short")
 
 
 # --- Development / test ----------------------------------------------------------------
@@ -151,4 +211,22 @@ def test_startup_fails_in_production_with_shared_secret(tmp_path):
 def test_startup_succeeds_in_production_with_independent_secrets(tmp_path):
     result = _start_app(tmp_path, APP_ENV="production", JWT_SECRET=GOOD_JWT,
                         NEWSLETTER_CONFIRMATION_SECRET=GOOD_NL)
+    assert result.returncode == 0, result.stderr[-2000:]
+
+
+def test_startup_fails_on_render_even_with_app_env_development(tmp_path):
+    result = _start_app(tmp_path, RENDER="true", APP_ENV="development")
+    assert result.returncode != 0 and "Refusing to start in production" in result.stderr
+
+
+def test_startup_fails_in_production_with_short_secret(tmp_path):
+    short = "s" * 31
+    result = _start_app(tmp_path, RENDER="true", JWT_SECRET=short, NEWSLETTER_CONFIRMATION_SECRET=GOOD_NL)
+    assert result.returncode != 0
+    assert "JWT_SECRET must be at least 32 characters long." in result.stderr
+    assert short not in result.stderr and GOOD_NL not in result.stderr
+
+
+def test_startup_succeeds_on_render_with_32_plus_character_secrets(tmp_path):
+    result = _start_app(tmp_path, RENDER="true", JWT_SECRET="J" * 32, NEWSLETTER_CONFIRMATION_SECRET="N" * 48)
     assert result.returncode == 0, result.stderr[-2000:]
